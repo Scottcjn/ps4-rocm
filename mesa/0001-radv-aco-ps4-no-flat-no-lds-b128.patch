@@ -1,0 +1,264 @@
+diff --git a/src/amd/common/ac_gpu_info.c b/src/amd/common/ac_gpu_info.c
+index aae6e0b..c3b5703 100644
+--- a/src/amd/common/ac_gpu_info.c
++++ b/src/amd/common/ac_gpu_info.c
+@@ -434,6 +434,20 @@ ac_fill_compiler_info(struct radeon_info *info, const struct drm_amdgpu_info_dev
+                                    info->family == CHIP_BONAIRE ||
+                                    info->family == CHIP_KABINI;
+ 
++   /* The PS4 APUs (Liverpool and Gladius) are semi-custom GFX7 chips that the
++    * kernel reports as Kaveri, so they can only be identified by PCI ID.
++    *
++    * FLAT memory instructions hang the GPU ("ring comp/gfx timeout"), while
++    * MUBUF with ADDR64 works, so global memory must be accessed the GFX6 way.
++    * ds_read_b128/ds_write_b128 also return/store wrong LDS data, while 64-bit
++    * and narrower LDS accesses are fine.
++    */
++   const bool is_ps4 = info->gfx_level == GFX7 &&
++                       (info->pci_id == 0x9920 || /* Liverpool (PS4) */
++                        info->pci_id == 0x9924);  /* Gladius (PS4 Pro) */
++   out->has_flat_hang_bug = is_ps4;
++   out->has_lds_b128_bug = is_ps4;
++
+    /* On GFX6-8, SMEM loads on a NULL PRT page return garbage instead of zero.
+     * On GFX10-12, SMEM loads on a NULL PRT page throws a VM fault and hangs the GPU.
+     *
+@@ -2198,6 +2212,8 @@ void ac_print_gpu_info(FILE *f, const struct radeon_info *info, int fd)
+    fprintf(f, "    has_primid_instancing_bug = %i\n", info->compiler_info.has_primid_instancing_bug);
+    fprintf(f, "    has_cs_regalloc_hang_bug = %i\n", info->compiler_info.has_cs_regalloc_hang_bug);
+    fprintf(f, "    has_smem_with_null_prt_bug = %i\n", info->compiler_info.has_smem_with_null_prt_bug);
++   fprintf(f, "    has_flat_hang_bug = %i\n", info->compiler_info.has_flat_hang_bug);
++   fprintf(f, "    has_lds_b128_bug = %i\n", info->compiler_info.has_lds_b128_bug);
+ 
+    fprintf(f, "Ring info:\n");
+    if (info->gfx_level >= GFX11) {
+diff --git a/src/amd/common/ac_gpu_info.h b/src/amd/common/ac_gpu_info.h
+index 04aa1ab..78b4a4c 100644
+--- a/src/amd/common/ac_gpu_info.h
++++ b/src/amd/common/ac_gpu_info.h
+@@ -228,9 +228,11 @@ struct ac_compiler_info {
+    uint32_t has_cs_regalloc_hang_bug : 1;
+    /* GFX6-GFX12, except GFX9: SMEM loads on NULL PRT page don't work. */
+    uint32_t has_smem_with_null_prt_bug : 1;
++   /* PS4 (Liverpool, Gladius): FLAT memory instructions hang the GPU. */
++   uint32_t has_flat_hang_bug : 1;
++   /* PS4 (Liverpool, Gladius): LDS accesses wider than 64 bits return wrong data. */
++   uint32_t has_lds_b128_bug : 1;
+    uint32_t has_desc_resource_level : 1;
+-
+-   uint32_t reserved : 2;
+ };
+ 
+ struct radeon_info {
+diff --git a/src/amd/compiler/aco_ir.cpp b/src/amd/compiler/aco_ir.cpp
+index 4b95e43..31283fe 100644
+--- a/src/amd/compiler/aco_ir.cpp
++++ b/src/amd/compiler/aco_ir.cpp
+@@ -114,6 +114,8 @@ init_program(Program* program, Stage stage, const struct aco_shader_info* info,
+    program->dev.sram_ecc_enabled = options->compiler_info->has_sram_ecc_enabled;
+    program->dev.has_point_sample_accel = options->compiler_info->has_point_sample_accel;
+    program->dev.has_gfx6_mrt_export_bug = options->compiler_info->has_gfx6_mrt_export_bug;
++   program->dev.has_flat_hang_bug = options->compiler_info->has_flat_hang_bug;
++   program->dev.has_lds_b128_bug = options->compiler_info->has_lds_b128_bug;
+ 
+    program->dev.has_fast_fma32 = options->compiler_info->has_fast_fma32;
+    program->dev.has_mac_legacy32 = program->gfx_level <= GFX7 || program->gfx_level == GFX10;
+diff --git a/src/amd/compiler/aco_ir.h b/src/amd/compiler/aco_ir.h
+index 53f4ad5..5e15a20 100644
+--- a/src/amd/compiler/aco_ir.h
++++ b/src/amd/compiler/aco_ir.h
+@@ -2306,6 +2306,8 @@ struct DeviceInfo {
+    bool sram_ecc_enabled = false;
+    bool has_point_sample_accel = false;
+    bool has_gfx6_mrt_export_bug = false;
++   bool has_flat_hang_bug = false;
++   bool has_lds_b128_bug = false;
+    bool has_desc_resource_level = false;
+ 
+    int32_t scratch_global_offset_min;
+diff --git a/src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp b/src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp
+index f7cc972..3641d2b 100644
+--- a/src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp
++++ b/src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp
+@@ -798,7 +798,9 @@ lower_global_address(isel_context* ctx, Builder& bld, uint32_t payload_size, uin
+          offset_src = nullptr;
+       }
+ 
+-      if (bld.program->gfx_level >= GFX7 && address.type() == RegType::vgpr)
++      /* Use MUBUF-addr64 like GFX6 if FLAT is broken. */
++      if (bld.program->gfx_level >= GFX7 && address.type() == RegType::vgpr &&
++          !bld.program->dev.has_flat_hang_bug)
+          format = Format::FLAT;
+    }
+ 
+@@ -826,14 +828,14 @@ lower_global_address(isel_context* ctx, Builder& bld, uint32_t payload_size, uin
+    }
+ 
+    if (format == Format::MUBUF) {
+-      /* GFX6 (MUBUF): (SGPR address, SGPR offset) or (SGPR address, VGPR offset) */
+-      /* GFX6 (MUBUF-addr64): (VGPR address, SGPR offset) */
++      /* GFX6-8 (MUBUF): (SGPR address, SGPR offset) or (SGPR address, VGPR offset) */
++      /* GFX6, GFX7 without FLAT (MUBUF-addr64): (VGPR address, SGPR offset) */
+       /* Disallow SGPR address with both a const_offset and offset in case of possible overflow. */
+       if (offset.id() && (address.type() == RegType::vgpr
+                              ? offset.type() != RegType::sgpr
+                              : add_might_overflow(ctx, offset_src, const_offset + payload_size))) {
+-         if (offset.type() == RegType::vgpr && bld.program->gfx_level > GFX6) {
+-            assert(address.type() == RegType::sgpr);
++         if (offset.type() == RegType::vgpr && address.type() == RegType::sgpr &&
++             bld.program->gfx_level > GFX6) {
+             address = add64_const64(bld, address, const_offset);
+             const_offset = 0;
+          } else {
+@@ -919,7 +921,7 @@ global_load_callback(Builder& bld, const LoadEmitInfo& info, unsigned bytes_need
+    RegClass rc = RegClass::get(RegType::vgpr, bytes_size);
+    Temp val = rc == info.dst.regClass() ? info.dst : bld.tmp(rc);
+    if (format == Format::MUBUF) {
+-      assert(bld.program->gfx_level == GFX6 || addr.type() != RegType::vgpr);
++      assert(bld.program->gfx_level <= GFX7 || addr.type() != RegType::vgpr);
+ 
+       aco_ptr<Instruction> mubuf{
+          create_instruction(mubuf_op, Format::MUBUF, 3 + 2 * info.disable_wqm, 1)};
+@@ -2506,7 +2508,7 @@ visit_store_global(isel_context* ctx, nir_intrinsic_instr* instr)
+          init_disable_wqm(bld, flat->flatlike(), true);
+          ctx->block->instructions.emplace_back(std::move(flat));
+       } else {
+-         assert(ctx->options->gfx_level == GFX6 || write_address.type() != RegType::vgpr);
++         assert(ctx->options->gfx_level <= GFX7 || write_address.type() != RegType::vgpr);
+ 
+          aco_opcode op = get_buffer_store_op(write_datas[i].bytes());
+ 
+@@ -2649,7 +2651,7 @@ visit_global_atomic(isel_context* ctx, nir_intrinsic_instr* instr)
+       init_disable_wqm(bld, flat->flatlike(), true);
+       ctx->block->instructions.emplace_back(std::move(flat));
+    } else {
+-      assert(ctx->options->gfx_level == GFX6 || addr.type() != RegType::vgpr);
++      assert(ctx->options->gfx_level <= GFX7 || addr.type() != RegType::vgpr);
+ 
+       UNUSED aco_opcode image_op;
+       translate_buffer_image_atomic_op(nir_op, &op32, &op64, &image_op);
+@@ -2972,21 +2974,6 @@ visit_load_shared(isel_context* ctx, nir_intrinsic_instr* instr)
+    assert(bytes == 12 ? align % 16 == 0 : align % bytes == 0);
+ 
+    Operand m = load_lds_size_m0(bld);
+-   aco_opcode op;
+-
+-   switch (bytes) {
+-   case 16: op = aco_opcode::ds_read_b128; break;
+-   case 12: op = aco_opcode::ds_read_b96; break;
+-   case 8: op = aco_opcode::ds_read_b64; break;
+-   case 4: op = aco_opcode::ds_read_b32; break;
+-   case 2:
+-      op = bld.program->gfx_level >= GFX9 ? aco_opcode::ds_read_u16_d16 : aco_opcode::ds_read_u16;
+-      break;
+-   case 1:
+-      op = bld.program->gfx_level >= GFX9 ? aco_opcode::ds_read_u8_d16 : aco_opcode::ds_read_u8;
+-      break;
+-   default: UNREACHABLE("Unsupported load_shared size");
+-   }
+ 
+    unsigned const_offset = nir_intrinsic_base(instr);
+    assert(const_offset <= UINT16_MAX);
+@@ -2994,11 +2981,43 @@ visit_load_shared(isel_context* ctx, nir_intrinsic_instr* instr)
+    Definition def = dst.regClass().type() == RegType::sgpr
+                        ? bld.def(RegClass::get(RegType::vgpr, bytes))
+                        : Definition(dst);
+-   Instruction* ds = bld.ds(op, def, address, m, const_offset);
+-   ds->ds().sync = get_memory_sync_info(instr, storage_shared, 0);
+ 
+-   if (m.isUndefined())
+-      ds->operands.pop_back();
++   /* Split loads wider than 64 bits if they are broken. */
++   unsigned read_count = 1;
++   Definition read_defs[2] = {def};
++   if (bytes > 8 && bld.program->dev.has_lds_b128_bug) {
++      assert(const_offset + 8 <= UINT16_MAX);
++      read_defs[0] = bld.def(v2);
++      read_defs[1] = bld.def(RegClass::get(RegType::vgpr, bytes - 8));
++      read_count = 2;
++   }
++
++   for (unsigned i = 0; i < read_count; i++) {
++      aco_opcode op;
++      switch (read_defs[i].bytes()) {
++      case 16: op = aco_opcode::ds_read_b128; break;
++      case 12: op = aco_opcode::ds_read_b96; break;
++      case 8: op = aco_opcode::ds_read_b64; break;
++      case 4: op = aco_opcode::ds_read_b32; break;
++      case 2:
++         op =
++            bld.program->gfx_level >= GFX9 ? aco_opcode::ds_read_u16_d16 : aco_opcode::ds_read_u16;
++         break;
++      case 1:
++         op = bld.program->gfx_level >= GFX9 ? aco_opcode::ds_read_u8_d16 : aco_opcode::ds_read_u8;
++         break;
++      default: UNREACHABLE("Unsupported load_shared size");
++      }
++
++      Instruction* ds = bld.ds(op, read_defs[i], address, m, const_offset + i * 8);
++      ds->ds().sync = get_memory_sync_info(instr, storage_shared, 0);
++
++      if (m.isUndefined())
++         ds->operands.pop_back();
++   }
++
++   if (read_count > 1)
++      bld.pseudo(aco_opcode::p_create_vector, def, read_defs[0].getTemp(), read_defs[1].getTemp());
+ 
+    if (def.getTemp() != dst) {
+       /* Use v_readfirstlane instead of p_as_uniform in order to avoid copy-propagation of
+@@ -3030,25 +3049,40 @@ visit_store_shared(isel_context* ctx, nir_intrinsic_instr* instr)
+ 
+    Builder bld(ctx->program, ctx->block);
+    Operand m = load_lds_size_m0(bld);
+-   aco_opcode op;
+-   switch (bytes) {
+-   case 16: op = aco_opcode::ds_write_b128; break;
+-   case 12: op = aco_opcode::ds_write_b96; break;
+-   case 8: op = aco_opcode::ds_write_b64; break;
+-   case 4: op = aco_opcode::ds_write_b32; break;
+-   case 2: op = aco_opcode::ds_write_b16; break;
+-   case 1: op = aco_opcode::ds_write_b8; break;
+-   default: UNREACHABLE("Unsupported load_shared size");
+-   }
+ 
+    unsigned const_offset = nir_intrinsic_base(instr);
+    assert(const_offset <= UINT16_MAX);
+ 
+-   Instruction* ds = bld.ds(op, address, data, m, const_offset);
+-   ds->ds().sync = get_memory_sync_info(instr, storage_shared, 0);
++   /* Split stores wider than 64 bits if they are broken. */
++   unsigned write_count = 1;
++   Temp write_datas[2] = {data};
++   if (bytes > 8 && bld.program->dev.has_lds_b128_bug) {
++      assert(const_offset + 8 <= UINT16_MAX);
++      write_datas[0] = bld.tmp(v2);
++      write_datas[1] = bld.tmp(RegClass::get(RegType::vgpr, bytes - 8));
++      bld.pseudo(aco_opcode::p_split_vector, Definition(write_datas[0]),
++                 Definition(write_datas[1]), data);
++      write_count = 2;
++   }
+ 
+-   if (m.isUndefined())
+-      ds->operands.pop_back();
++   for (unsigned i = 0; i < write_count; i++) {
++      aco_opcode op;
++      switch (write_datas[i].bytes()) {
++      case 16: op = aco_opcode::ds_write_b128; break;
++      case 12: op = aco_opcode::ds_write_b96; break;
++      case 8: op = aco_opcode::ds_write_b64; break;
++      case 4: op = aco_opcode::ds_write_b32; break;
++      case 2: op = aco_opcode::ds_write_b16; break;
++      case 1: op = aco_opcode::ds_write_b8; break;
++      default: UNREACHABLE("Unsupported load_shared size");
++      }
++
++      Instruction* ds = bld.ds(op, address, write_datas[i], m, const_offset + i * 8);
++      ds->ds().sync = get_memory_sync_info(instr, storage_shared, 0);
++
++      if (m.isUndefined())
++         ds->operands.pop_back();
++   }
+ }
+ 
+ void
