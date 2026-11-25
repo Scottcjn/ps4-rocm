@@ -1,0 +1,6 @@
+== 2026-11-25T22:00:13+00:00 t_noop  (timeout 30s) env: 
+noop dispatch 0 retired in 15.3 us
+noop dispatch 1 retired in 10.6 us
+noop dispatch 2 retired in 10.3 us
+RESULT PASS noop
+== t_noop  rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_noop.log

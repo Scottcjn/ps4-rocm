@@ -1,0 +1,5 @@
+== 2026-11-25T22:00:14+00:00 t_vadd  (timeout 120s) env: 
+vadd rep 0: 16777216 floats in 10.86 ms (18.54 GB/s moved, 12 B/elem), 0 mismatches
+vadd rep 1: 16777216 floats in 10.81 ms (18.62 GB/s moved, 12 B/elem), 0 mismatches
+RESULT PASS vadd n=16777216
+== t_vadd  rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vadd.log

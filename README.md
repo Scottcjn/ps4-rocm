@@ -41,6 +41,8 @@ The fix direction:
 | `tools/extract-builtin-fw.py` | Dumps `CONFIG_EXTRA_FIRMWARE` blobs from a vmlinux (to rebuild a kernel that boots the same hardware) |
 | `tools/fetch-model.sh` | Downloads a GGUF together with its LICENSE, model card and a revision-pinned receipt |
 | `kernel/0001-amdkfd-register-ps4-liverpool-gladius.patch` | Registers the PS4 GPUs with KFD (`/dev/kfd`) |
+| `bridge/pm4bridge/` | **PM4 bridge**: run clang-compiled gfx701 kernels on KFD PM4 queues (no AQL needed); tests + bandwidth/latency numbers |
+| `docs/SOFT-AQL-DESIGN.md` | Design for running stock ROCm (HSA) on top of PM4 queues |
 | `kernel/build-kfd-kernel.sh` | Builds a Strawberry kernel with KFD from a node's running config |
 
 ## Quick start (one PS4)

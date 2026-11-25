@@ -1,0 +1,16 @@
+== 2026-11-25T22:00:13+00:00 t_fill 0x11110000 0x77770000 (timeout 60s) env: 
+fill #1: 0 mismatches of 1000037
+fill #2 (same buffer, new value): 0 mismatches of 1000037
+addk #1 (after CPU write): 0 mismatches of 1000037
+addk #2 (after CPU rewrite): 0 mismatches of 1000037
+addk #3 (GPU on GPU result): 0 mismatches of 1000037
+RESULT PASS fill v1=0x11110000 v2=0x77770000
+== t_fill 0x11110000 0x77770000 rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_fill.log
+== 2026-11-25T22:00:14+00:00 t_fill 0xABCD0000 0x00420000 (timeout 60s) env: 
+fill #1: 0 mismatches of 1000037
+fill #2 (same buffer, new value): 0 mismatches of 1000037
+addk #1 (after CPU write): 0 mismatches of 1000037
+addk #2 (after CPU rewrite): 0 mismatches of 1000037
+addk #3 (GPU on GPU result): 0 mismatches of 1000037
+RESULT PASS fill v1=0xabcd0000 v2=0x420000
+== t_fill 0xABCD0000 0x00420000 rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_fill.log

@@ -1,0 +1,5 @@
+== 2026-11-25T22:00:22+00:00 t_wide 256 64 (timeout 120s) env: 
+readbw4  256 MB iters 64: best 14.84 ms = 18.09 GB/s read, mismatches 0
+copybw4  256 MB iters 64: best 32.30 ms = 8.31 GB/s copied = 16.62 GB/s read+write traffic, mismatches 0
+RESULT PASS wide 256 MB
+== t_wide 256 64 rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_wide.log

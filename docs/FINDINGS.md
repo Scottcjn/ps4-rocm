@@ -190,6 +190,32 @@ Kernel side:
   CreateDestroyCpQueue 48 ms, SubmitNopCpQueue 12 ms, EmptyDispatch 229 ms and SimpleWriteDispatch 58 ms all PASS,
   with 0 GPU timeouts and no new kernel warnings.
 
+## 2d. pm4bridge: clang kernels on KFD PM4 queues (2026-11-25), `bridge/pm4bridge/`
+
+A C library (`pm4_init/alloc/load/dispatch/wait`) that loads a clang `-mcpu=hawaii` no-FLAT code object (`.text` + `.kd`) and
+dispatches it with `DISPATCH_DIRECT` on a KFD PM4 compute queue (kfdtest-derived, MIT). All tests pass, **0 hangs**:
+
+| test | result |
+|---|---|
+| noop | ~10 µs round trip |
+| fill ×2 (stale-cache check), vadd 16M, matvec 4096² | bit-exact vs CPU |
+| stress 2×1000 dispatches | none lost; 10.7 µs sync / 7.6 µs async per dispatch |
+| errors | 20 misuse cases rejected; a scratch-needing kernel is refused at load |
+| **copy/read bandwidth** | **read 18.2 GB/s, write 7.3 GB/s**, copy 9.1 GB/s (CPU memcpy 5.25 GB/s) |
+| matvec f32 | 9.0 GFLOP/s at 18.0 GB/s (column-major); CPU 1 thread 1.25 GFLOP/s |
+
+**The GPU memory path tops out at ~18 GB/s read**, which matches llama.cpp generation (~16 GB/s effective). This is the
+real token-generation bottleneck. More waves, 16-byte loads, pinned GTT and CU masks all leave it unchanged.
+**Hypothesis (unproven):** under Linux, KFD/RADV buffers live in GTT (system memory, snooped), which on the PS4 goes over the
+coherent "Onion" path rather than the GPU's fast "Garlic" path. Only the 128 MiB VRAM carve-out (`linux-128mb.elf`) would
+use the fast path. The ps4-linux payload supports **1–5 GB VRAM via `vram.txt`**. Test: boot with a large carve-out, put a
+buffer in VRAM, and re-run `t_copybw`.
+
+Other findings:
+- kfdtest's `DISPATCH_INITIATOR 0x21` makes gfx7 treat `dim_x` as a *thread* count; the correct value is `0x1` (Garlic's).
+- `buffer_*_dwordx4` (global) is fine; the b128 bug is LDS-only.
+- GPU timestamps tick at ~100 MHz.
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux

@@ -1,0 +1,20 @@
+*.o
+*.a
+kernels/*.co
+kernels/*.s
+tests/t_noop
+tests/t_fill
+tests/t_vadd
+tests/t_copybw
+tests/t_matvec
+tests/t_stress
+tests/t_wide
+tests/t_errors
+kernels/bad/*.co
+
+# stray copies uploaded by mistake (not part of pm4bridge); safe to delete
+/plp/
+/ps4-multiboot/
+/rocr-latest/
+/rsys/
+/AMDGPU.td

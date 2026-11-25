@@ -1,0 +1,7 @@
+== 2026-11-25T22:00:17+00:00 t_stress  (timeout 120s) env: 
+sync : 1000 dispatches in 10.69 ms = 10.7 us/dispatch (min 9.8, max 29.6)
+sync: 0 errors
+async: 1000 dispatches in 7.62 ms = 7.6 us/dispatch
+async: 0 errors
+RESULT PASS stress 1000+1000 dispatches
+== t_stress  rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_stress.log

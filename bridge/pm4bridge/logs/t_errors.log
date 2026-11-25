@@ -1,0 +1,23 @@
+== 2026-11-25T22:00:13+00:00 t_errors  (timeout 30s) env: 
+pm4: error: kernels/does-not-exist.co: No such file or directory
+pm4: error: Makefile: not a linked amdgcn ELF64 code object
+pm4: error: kernels/fill.co: symbol no_such_kernel.kd not found
+pm4: error: scratch: kernel needs scratch (private_segment_fixed_size 260, properties 0x9); this GPU has no scratch
+pm4_load(ctx, kpath("does-not-exist.co"), "fill", &k)      -> cannot read code object              ok
+pm4_load(ctx, "Makefile", "fill", &k)                      -> not a usable amdgcn code object      ok
+pm4_load(ctx, kpath("fill.co"), "no_such_kernel", &k)      -> kernel symbol not found              ok
+pm4_load(ctx, kpath("bad/scratch.co"), "scratch", &k)      -> kernel needs an unsupported feature  ok
+pm4_alloc(ctx, 0, 0, &b)                                   -> bad argument                         ok
+pm4_dispatch(ctx, k, 0, 64, arg, sizeof(arg))              -> bad argument                         ok
+pm4_dispatch(ctx, k, 64, 0, arg, sizeof(arg))              -> bad argument                         ok
+pm4_dispatch(ctx, k, 1024, 512, arg, sizeof(arg))          -> bad argument                         ok
+pm4_dispatch(ctx, k, 64, 64, arg, 8)                       -> bad argument                         ok
+pm4_dispatch(ctx, k, 64, 64, NULL, 20)                     -> bad argument                         ok
+pm4_wait(ctx, 1, 100)                                      -> bad argument                         ok
+pm4_wait(ctx, 0, 100)                                      -> bad argument                         ok
+pm4_dispatch(ctx, noop, 64, 64, NULL, 0)                   -> unknown error                        ok
+pm4_wait(ctx, 1, 5000)                                     -> ok                                   ok
+pm4_wait(ctx, 1, 0)                                        -> ok                                   ok
+pm4_wait(ctx, 2, 100)                                      -> bad argument                         ok
+RESULT PASS errors (0 unexpected)
+== t_errors  rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_errors.log

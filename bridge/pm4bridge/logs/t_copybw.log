@@ -1,0 +1,40 @@
+== 2026-11-25T22:00:17+00:00 t_copybw  (timeout 300s) env: PM4_GPU_TS=1
+cpu memcpy 256 MB: 50.9 ms = 5.28 GB/s copied (read+write traffic 10.56 GB/s)
+copy  iters   16 rep 0:   29.84 ms    9.00 GB/s copied (17.99 GB/s traffic) gpu_ticks 2964238  mismatches 0
+copy  iters   16 rep 1:   29.95 ms    8.96 GB/s copied (17.92 GB/s traffic) gpu_ticks 2977353  mismatches 0
+copy  iters   16 rep 2:   29.78 ms    9.01 GB/s copied (18.03 GB/s traffic) gpu_ticks 2964550  mismatches 0
+copybw iters 16: best 9.01 GB/s copied = 18.03 GB/s read+write traffic
+read  iters   16 rep 0:   15.12 ms   17.75 GB/s  gpu_ticks 1499582
+read  iters   16 rep 1:   15.09 ms   17.79 GB/s  gpu_ticks 1499669
+read  iters   16 rep 2:   15.18 ms   17.68 GB/s  gpu_ticks 1504404
+readbw iters 16: best 17.79 GB/s read, mismatches 0
+write iters   16 rep 0:   36.66 ms    7.32 GB/s  gpu_ticks 3646166
+write iters   16 rep 1:   36.72 ms    7.31 GB/s  gpu_ticks 3656277
+write iters   16 rep 2:   36.78 ms    7.30 GB/s  gpu_ticks 3659215
+writebw iters 16: best 7.32 GB/s written, mismatches 0
+copy  iters   64 rep 0:   29.87 ms    8.99 GB/s copied (17.97 GB/s traffic) gpu_ticks 2967784  mismatches 0
+copy  iters   64 rep 1:   29.81 ms    9.01 GB/s copied (18.01 GB/s traffic) gpu_ticks 2962825  mismatches 0
+copy  iters   64 rep 2:   29.84 ms    9.00 GB/s copied (17.99 GB/s traffic) gpu_ticks 2962946  mismatches 0
+copybw iters 64: best 9.01 GB/s copied = 18.01 GB/s read+write traffic
+read  iters   64 rep 0:   14.78 ms   18.16 GB/s  gpu_ticks 1466602
+read  iters   64 rep 1:   14.75 ms   18.20 GB/s  gpu_ticks 1465228
+read  iters   64 rep 2:   14.78 ms   18.16 GB/s  gpu_ticks 1468069
+readbw iters 64: best 18.20 GB/s read, mismatches 0
+write iters   64 rep 0:   36.85 ms    7.28 GB/s  gpu_ticks 3660568
+write iters   64 rep 1:   36.87 ms    7.28 GB/s  gpu_ticks 3661740
+write iters   64 rep 2:   36.75 ms    7.30 GB/s  gpu_ticks 3657716
+writebw iters 64: best 7.30 GB/s written, mismatches 0
+copy  iters  256 rep 0:   29.73 ms    9.03 GB/s copied (18.06 GB/s traffic) gpu_ticks 2950640  mismatches 0
+copy  iters  256 rep 1:   29.79 ms    9.01 GB/s copied (18.02 GB/s traffic) gpu_ticks 2959289  mismatches 0
+copy  iters  256 rep 2:   29.66 ms    9.05 GB/s copied (18.10 GB/s traffic) gpu_ticks 2947061  mismatches 0
+copybw iters 256: best 9.05 GB/s copied = 18.10 GB/s read+write traffic
+read  iters  256 rep 0:   14.77 ms   18.17 GB/s  gpu_ticks 1461866
+read  iters  256 rep 1:   14.75 ms   18.20 GB/s  gpu_ticks 1461016
+read  iters  256 rep 2:   14.68 ms   18.29 GB/s  gpu_ticks 1460522
+readbw iters 256: best 18.29 GB/s read, mismatches 0
+write iters  256 rep 0:   36.83 ms    7.29 GB/s  gpu_ticks 3662531
+write iters  256 rep 1:   37.30 ms    7.20 GB/s  gpu_ticks 3706822
+write iters  256 rep 2:   36.76 ms    7.30 GB/s  gpu_ticks 3653830
+writebw iters 256: best 7.30 GB/s written, mismatches 0
+RESULT PASS copybw
+== t_copybw  rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_copybw.log
