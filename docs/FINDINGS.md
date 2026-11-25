@@ -109,6 +109,18 @@ large-workgroup shaders.
 - The PS4 user partition is `/dev/mapper/ps4hdd` (UFS2), already mounted rw by the initramfs. A second mount must reuse that superblock (`mount` + `remount,bind,ro`); a plain `-o ro` mount is refused.
 - The kernel lives at `/data/linux/boot/bzImage` on that partition. The root filesystem is a loop image (`/user/app/linux.img`).
 
+## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
+
+The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
+through the shared `/dev/mapper/ps4hdd` UFS2 mount (`CONFIG_UFS_FS_WRITE=y`, which the root image already relies on):
+1. Verify the current `bzImage` against the backup.
+2. Write `bzImage-new`, `sync`, drop caches, verify sha256 from disk.
+3. Rename `bzImage` → `bzImage-stock` and `bzImage-new` → `bzImage`; verify again from disk.
+
+Zero UFS/I/O errors in dmesg. Rollback: rename back from Linux, or over GoldHEN FTP with `tools/ps4-ftp-kernel.sh rollback`.
+The initramfs only *mounts* an existing `/ps4hdd/app/linux.img`. Reinstalling (`install-linux-int.sh`) is manual and
+requires typing `YES`, so reboots don't wipe the install.
+
 ## Next
 
 1. Boot the KFD kernel next to the original (keep `bzImage` untouched) → check `/dev/kfd` and the KFD topology.
