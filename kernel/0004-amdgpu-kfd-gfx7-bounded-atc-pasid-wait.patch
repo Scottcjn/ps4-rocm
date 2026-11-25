@@ -1,0 +1,33 @@
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gfx_v7.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gfx_v7.c
+index 2f62e5e30..84429ea17 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gfx_v7.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gfx_v7.c
+@@ -102,10 +102,26 @@ static int kgd_set_pasid_vmid_mapping(struct amdgpu_device *adev, u32 pasid,
+ 	uint32_t pasid_mapping = (pasid == 0) ? 0 : (uint32_t)pasid |
+ 			ATC_VMID0_PASID_MAPPING__VALID_MASK;
+ 
++	unsigned int i;
++
+ 	WREG32(mmATC_VMID0_PASID_MAPPING + vmid, pasid_mapping);
+ 
+-	while (!(RREG32(mmATC_VMID_PASID_MAPPING_UPDATE_STATUS) & (1U << vmid)))
+-		cpu_relax();
++	/*
++	 * ps4: bounded wait. This was an unbounded spin; on the PS4 GPUs
++	 * (Liverpool/Gladius) the ATC handshake has never been exercised, and a
++	 * missing ack would soft-lock the CPU on the first KFD queue create.
++	 * KFD on these chips uses GPUVM with ATC disabled in the MQD, so the ATC
++	 * mapping is not needed for translation: warn once and continue, still
++	 * programming the IH LUT below (needed for PASIDs in KFD interrupts).
++	 */
++	for (i = 0; i < adev->usec_timeout; i++) {
++		if (RREG32(mmATC_VMID_PASID_MAPPING_UPDATE_STATUS) & (1U << vmid))
++			break;
++		udelay(1);
++	}
++	if (i == adev->usec_timeout)
++		dev_warn_once(adev->dev,
++			      "ATC PASID mapping not acked for vmid %u, continuing\n", vmid);
+ 	WREG32(mmATC_VMID_PASID_MAPPING_UPDATE_STATUS, 1U << vmid);
+ 
+ 	/* Mapping vmid to pasid also for IH block */

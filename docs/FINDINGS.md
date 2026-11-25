@@ -59,9 +59,39 @@ That code is never compiled in stock builds (KFD off), so nobody noticed it. The
 Liverpool/Hawaii in the "VMID/PASID not written into IH ring entry" workaround (assumed for Gladius, not observed).
 With both patches the whole amdgpu/amdkfd directory compiles cleanly (clang 20, LLVM=1).
 
-Status: **patched + compiles, not yet booted.**
+Pre-boot review (Grok read the tree; a research agent read the tree and upstream ROCm independently) found
+two more never-run problems, both fixed:
+- `0003`: in no-HWS mode (forced for these chips), `start_nocpsch()` initialised the packet manager only for
+  Hawaii, but the dequeue TC flush ran for Liverpool too, which is a **NULL `pmf` dereference** (kernel oops) on the
+  first queue destroy. Gladius was missing from both. One helper now keeps flush and `pm_init`/`pm_uninit` in sync.
+- `0004`: `kgd_set_pasid_vmid_mapping()` spun **forever** waiting for the ATC handshake, which no PS4 had ever
+  exercised. It's now bounded by `usec_timeout`; on timeout it warns once and continues. ATC is off in the MQD
+  (GPUVM path), and the IH LUT, which KFD events need, is still programmed.
+Checked and fine: doorbell BAR 2 is 8 MiB; MSI interrupts are enabled (`PS4 GPU IRQ: … msi_enabled=1`); KFD forces
+the SW scheduler (no HWS) for these chips; VMIDs are split 8-15 for KFD. `AMD_IS_APU` is set, so KFD takes the modern
+APU memory path (GTT as public local memory, no IOMMUv2/ATS).
+
+Status: **4 patches, compiles cleanly, not yet booted.**
 
 Building the kernel needs the firmware blobs that the running kernel has built in (`mrvl/sd8797_uapsta.bin` can't be downloaded by `build.sh`). `tools/extract-builtin-fw.py` lifts all 37 of them byte-for-byte from the running `bzImage`.
+
+## 2b. Mesa ACO patch: no FLAT, no 128-bit LDS on PS4 (tested on Gladius)
+
+A PCI-ID-gated (0x9920, 0x9924) `has_flat_hang_bug` / `has_lds_b128_bug` in `ac_gpu_info`:
+- ACO lowers global memory to MUBUF addr64 (the GFX6 path), not FLAT.
+- LDS accesses wider than 64 bits are split.
+
+The patch is written but not yet in this repo.
+
+| test (patched RADV) | before | after |
+|---|---|---|
+| vkbisect, all 12 combinations | 8 HANG | **12 OK, 0 GPU timeouts** |
+| meta fill shader ISA | `flat_store_dwordx2` | `buffer_store_dwordx2` |
+| llama.cpp `test-backend-ops -o ADD` | device lost | **173/173 passed** |
+| llama.cpp `test-backend-ops -o MUL_MAT` | device lost | 2359 cases OK, then **one case hangs** (hard reset) |
+
+The remaining MUL_MAT hang is being bisected: something besides FLAT/b128, possibly `ds_read2_b64`, subgroup ops, or
+large-workgroup shaders.
 
 ## 3. Platform gotchas (all handled in the scripts)
 

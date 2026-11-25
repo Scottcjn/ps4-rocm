@@ -1,0 +1,57 @@
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.c b/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.c
+index af22056e4..909f90c9d 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.c
+@@ -714,6 +714,18 @@ static int allocate_vmid(struct device_queue_manager *dqm,
+ 	return 0;
+ }
+ 
++/*
++ * GFX7 chips whose CP doesn't flush the texture cache at dequeue: KFD flushes it
++ * itself through the packet manager, which in no-HWS mode is only initialised
++ * for these chips. Keep the dequeue check and pm_init/pm_uninit in sync.
++ */
++static bool dqm_needs_nocpsch_pm(struct amdgpu_device *adev)
++{
++	return adev->asic_type == CHIP_HAWAII ||
++	       adev->asic_type == CHIP_LIVERPOOL ||
++	       adev->asic_type == CHIP_GLADIUS;
++}
++
+ static int flush_texture_cache_nocpsch(struct kfd_node *kdev,
+ 				struct qcm_process_device *qpd)
+ {
+@@ -738,9 +750,12 @@ static void deallocate_vmid(struct device_queue_manager *dqm,
+ {
+ 	struct device *dev = dqm->dev->adev->dev;
+ 
+-	/* On GFX v7, CP doesn't flush TC at dequeue */
+-	if ((q->device->adev->asic_type == CHIP_HAWAII) ||
+-		(q->device->adev->asic_type == CHIP_LIVERPOOL))
++	/* On GFX v7, CP doesn't flush TC at dequeue.
++	 * ps4: Gladius is the PS4 Pro variant of Liverpool. This flush needs the
++	 * packet manager, so start_nocpsch()/stop_nocpsch() must init it for the
++	 * same chips (they only did for Hawaii -> NULL pmf deref on Liverpool).
++	 */
++	if (dqm_needs_nocpsch_pm(q->device->adev))
+ 		if (flush_texture_cache_nocpsch(q->device, qpd))
+ 			dev_err(dev, "Failed to flush TC\n");
+ 
+@@ -1807,7 +1822,7 @@ static int start_nocpsch(struct device_queue_manager *dqm)
+ 	pr_info("SW scheduler is used");
+ 	init_interrupts(dqm);
+ 
+-	if (dqm->dev->adev->asic_type == CHIP_HAWAII)
++	if (dqm_needs_nocpsch_pm(dqm->dev->adev))
+ 		r = pm_init(&dqm->packet_mgr, dqm);
+ 	if (!r)
+ 		dqm->sched_running = true;
+@@ -1823,7 +1838,7 @@ static int stop_nocpsch(struct device_queue_manager *dqm)
+ 		return 0;
+ 	}
+ 
+-	if (dqm->dev->adev->asic_type == CHIP_HAWAII)
++	if (dqm_needs_nocpsch_pm(dqm->dev->adev))
+ 		pm_uninit(&dqm->packet_mgr);
+ 	dqm->sched_running = false;
+ 	dqm_unlock(dqm);
