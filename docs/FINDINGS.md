@@ -54,7 +54,12 @@ The Strawberry 7.3.4 tree already lists `CHIP_LIVERPOOL` / `CHIP_GLADIUS` in:
 - with CWSR off (no gfx7 trap-handler firmware),
 - with PCIe atomics not required (internal APU bus).
 
-Status: **patched, not yet booted.**
+Also `kernel/0002-…`: the existing PS4 line in `cik_event_interrupt.c` has an unbalanced parenthesis.
+That code is never compiled in stock builds (KFD off), so nobody noticed it. The patch fixes it and adds Gladius next to
+Liverpool/Hawaii in the "VMID/PASID not written into IH ring entry" workaround (assumed for Gladius, not observed).
+With both patches the whole amdgpu/amdkfd directory compiles cleanly (clang 20, LLVM=1).
+
+Status: **patched + compiles, not yet booted.**
 
 Building the kernel needs the firmware blobs that the running kernel has built in (`mrvl/sd8797_uapsta.bin` can't be downloaded by `build.sh`). `tools/extract-builtin-fw.py` lifts all 37 of them byte-for-byte from the running `bzImage`.
 

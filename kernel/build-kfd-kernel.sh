@@ -40,8 +40,10 @@ python3 -I "$HERE/../tools/extract-builtin-fw.py" "$WORK/$NODE-vmlinux" "$WORK/$
 
 # 3. patch (idempotent)
 cd "$SRC"
-git apply --check "$HERE/0001-amdkfd-register-ps4-liverpool-gladius.patch" 2>/dev/null && \
-  git apply "$HERE/0001-amdkfd-register-ps4-liverpool-gladius.patch" || echo "patch already applied"
+for p in "$HERE"/0*.patch; do
+  if git apply --check "$p" 2>/dev/null; then git apply "$p"; echo "applied $(basename "$p")"
+  else echo "skip $(basename "$p") (already applied?)"; fi
+done
 
 # config + firmware into the tree
 [ -f config.strawberry-default ] || cp config config.strawberry-default
