@@ -159,7 +159,7 @@ That's the next optimisation target.
 ROCr/libhsakmt `rocm-6.4.4` (the last release with the legacy doorbell path) and kfdtest were built on the Pro (clang/LLVM 23, cmake 4.5).
 `rocm/rocr-6.4.4-ps4-gfx7.patch` holds the toolchain fixes and the kfdtest no-FLAT shader. The parts that matter:
 - `kfdtest/ShaderStore.cpp`: `CopyDwordIsa` gfx7 → `buffer_load/store_dword … addr64`, rsrc `{0,0,0,0x100f000}`.
-- `libhsakmt/queues.c`: the CWSR workaround is superseded by kernel patch `0005`.
+- (The libhsakmt CWSR workaround the first run needed is gone: kernel `0005` fixes it. See below.)
 
 | kfdtest | result |
 |---|---|
@@ -185,6 +185,10 @@ Kernel side:
   so every compute queue create failed with `EINVAL`. Skipped now.
 - The ATC handshake works: there was no `ATC PASID mapping not acked`.
 - One unexplained `WARN_ONCE` happened during the first queue run: `FW bug: No PASID in KFD interrupt` (vmid 8, pasid 0).
+  It did **not** recur on kernel v3.
+- **0005 validated (kernel v3, build #3, booted via GoldHEN BinLoader):** with stock libhsakmt (no workaround),
+  CreateDestroyCpQueue 48 ms, SubmitNopCpQueue 12 ms, EmptyDispatch 229 ms and SimpleWriteDispatch 58 ms all PASS,
+  with 0 GPU timeouts and no new kernel warnings.
 
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 

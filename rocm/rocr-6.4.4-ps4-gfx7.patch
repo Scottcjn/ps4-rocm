@@ -1,24 +1,3 @@
-diff --git a/libhsakmt/src/queues.c b/libhsakmt/src/queues.c
-index 05395fb..b66b23f 100644
---- a/libhsakmt/src/queues.c
-+++ b/libhsakmt/src/queues.c
-@@ -709,6 +709,16 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtCreateQueueExt(HSAuint32 NodeId,
- 	args.queue_priority = priority_map[Priority+3];
- 	args.sdma_engine_id = SdmaEngineId;
- 
-+	/* PS4/gfx7 workaround: kernels >= 6.12 (kfd_queue_acquire_buffers) look
-+	 * up a GPU VM mapping at ctx_save_restore_address even when the node has
-+	 * no CWSR (cwsr_size 0), and fail CREATE_QUEUE with EINVAL for address 0.
-+	 * Point it at this queue struct (start of a GPU mapping); with size 0
-+	 * the kernel only takes a reference, the CIK MQD never uses it.
-+	 */
-+	if (q->gfxv < 0x80000 && (Type == HSA_QUEUE_COMPUTE || Type == HSA_QUEUE_COMPUTE_AQL) &&
-+	    !args.ctx_save_restore_address)
-+		args.ctx_save_restore_address = (uintptr_t)q;
-+
- 	err = hsakmt_ioctl(hsakmt_kfd_fd, AMDKFD_IOC_CREATE_QUEUE, &args);
- 
- 	if (err == -1) {
 diff --git a/libhsakmt/tests/kfdtest/src/Assemble.cpp b/libhsakmt/tests/kfdtest/src/Assemble.cpp
 index eda7fa8..5a8b19c 100644
 --- a/libhsakmt/tests/kfdtest/src/Assemble.cpp
