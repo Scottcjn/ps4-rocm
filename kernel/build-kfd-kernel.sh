@@ -50,6 +50,13 @@ scripts/config --file config --enable CONFIG_HSA_AMD --disable CONFIG_HSA_AMD_SV
 mkdir -p extra_firmware && cp -r "$WORK/$NODE-firmware/." extra_firmware/
 
 # 5. build
+# Ubuntu/Debian ship LLVM tools as llvm-objcopy-20 etc.; the unversioned names (which LLVM=1 calls)
+# live in /usr/lib/llvm-N/bin. Without this the build fails late with "llvm-objcopy: not found".
+if ! command -v llvm-objcopy >/dev/null; then
+  LLVM_BIN="$(ls -d /usr/lib/llvm-*/bin 2>/dev/null | sort -V | tail -1)"
+  [ -n "$LLVM_BIN" ] && [ -x "$LLVM_BIN/llvm-objcopy" ] || { echo "ERROR: llvm-objcopy not found — install llvm"; exit 1; }
+  export PATH="$LLVM_BIN:$PATH"; echo "using LLVM tools from $LLVM_BIN"
+fi
 ./build.sh --option 1 use=Server lto=FullLTO jobs="${JOBS:-12}" 2>&1 | tee "$WORK/build-kfd.log"
 ls -la out/bzImage && sha256sum out/bzImage
 grep -q 'CONFIG_HSA_AMD=y' .config && echo "KFD enabled in built kernel config"

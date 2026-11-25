@@ -56,6 +56,8 @@ Requirements: a PS4 / PS4 Pro already running Linux (e.g. Strawberry kernel + Ar
 
 - **Garlic LLM** (Leonardo Alegría, GPLv3): runs Qwen LLMs natively on the PS4 GPU. Its source documents the PS4 GPU's rules (no FLAT, no `ds_read_b128`, no scratch, non-coherent L1). We relied on those documented findings; no Garlic code is included here.
 - **Strawberry PS4 kernel** by rmux ([gitlab.com/rmuxnet/linux](https://gitlab.com/rmuxnet/linux)), which already carries most of the PS4 KFD plumbing.
+  `kernel/*.patch` is a small change **to** Strawberry, not a fork of it. It's meant to go upstream as a merge request there.
+  Build Strawberry from its own repo; this project doesn't ship kernels.
 - **fail0verflow**, for the original PS4 Linux and Radeon bring-up.
 
 ## License

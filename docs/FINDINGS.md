@@ -11,6 +11,7 @@ All of this was measured on one PS4 Pro: GoldHEN 12.00, Arch Linux, Strawberry k
 | CUs | **36**, measured via `VK_AMD_shader_core_properties`: 4 SE × 9 CU, 4 SIMD/CU, wave64 |
 | Memory | 8 GB GDDR5 unified; Linux sees 7.6 GiB. 128 MiB VRAM carve-out + 3.9 GiB GTT. Vulkan heaps: 2682 MiB device-local, 1341 MiB host |
 | Vulkan | RADV reports it as `AMD GL-B2 (RADV KAVERI)`, Vulkan 1.3. int8 yes, **FP16 not exposed** (the Pro's packed FP16 is hidden behind the gfx7 identity) |
+| Disk | Stock PS4 Pro drive: HGST Travelstar 5K1000 `HTS541010B9E380`, 1 TB 2.5" SATA, **mechanical** (`rotational=1`; 5400 rpm per the model number, not measured) |
 | KFD | **Off** in stock Strawberry builds (`# CONFIG_HSA_AMD is not set`) |
 
 ## 1. Vulkan compute hangs: root cause = FLAT
@@ -58,6 +59,9 @@ Status: **patched, not yet booted.**
 Building the kernel needs the firmware blobs that the running kernel has built in (`mrvl/sd8797_uapsta.bin` can't be downloaded by `build.sh`). `tools/extract-builtin-fw.py` lifts all 37 of them byte-for-byte from the running `bzImage`.
 
 ## 3. Platform gotchas (all handled in the scripts)
+
+- Kernel build on Ubuntu: `LLVM=1` calls `llvm-objcopy` / `llvm-readelf`, which Ubuntu installs only as `*-20`.
+  Put `/usr/lib/llvm-20/bin` first in `PATH` (`kernel/build-kfd-kernel.sh` does this).
 
 - `vulkaninfo` crashes: with `amdgpu.dc=0` there is no display engine (`VK_KHR_display` → OUT_OF_HOST_MEMORY). Use `tools/vkprobe`.
 - Fresh PS4 Arch images ship without a pacman keyring.
