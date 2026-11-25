@@ -1,0 +1,231 @@
+diff --git a/libhsakmt/src/queues.c b/libhsakmt/src/queues.c
+index 05395fb..b66b23f 100644
+--- a/libhsakmt/src/queues.c
++++ b/libhsakmt/src/queues.c
+@@ -709,6 +709,16 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtCreateQueueExt(HSAuint32 NodeId,
+ 	args.queue_priority = priority_map[Priority+3];
+ 	args.sdma_engine_id = SdmaEngineId;
+ 
++	/* PS4/gfx7 workaround: kernels >= 6.12 (kfd_queue_acquire_buffers) look
++	 * up a GPU VM mapping at ctx_save_restore_address even when the node has
++	 * no CWSR (cwsr_size 0), and fail CREATE_QUEUE with EINVAL for address 0.
++	 * Point it at this queue struct (start of a GPU mapping); with size 0
++	 * the kernel only takes a reference, the CIK MQD never uses it.
++	 */
++	if (q->gfxv < 0x80000 && (Type == HSA_QUEUE_COMPUTE || Type == HSA_QUEUE_COMPUTE_AQL) &&
++	    !args.ctx_save_restore_address)
++		args.ctx_save_restore_address = (uintptr_t)q;
++
+ 	err = hsakmt_ioctl(hsakmt_kfd_fd, AMDKFD_IOC_CREATE_QUEUE, &args);
+ 
+ 	if (err == -1) {
+diff --git a/libhsakmt/tests/kfdtest/src/Assemble.cpp b/libhsakmt/tests/kfdtest/src/Assemble.cpp
+index eda7fa8..5a8b19c 100644
+--- a/libhsakmt/tests/kfdtest/src/Assemble.cpp
++++ b/libhsakmt/tests/kfdtest/src/Assemble.cpp
+@@ -303,14 +303,14 @@ int Assembler::RunAssemble(const char* const AssemblySource) {
+ 
+     // Initialize MC interfaces and base class objects
+     std::unique_ptr<const MCRegisterInfo> MRI(
+-            TheTarget->createMCRegInfo(TripleName));
++            TheTarget->createMCRegInfo(TheTriple));
+     if (!MRI) {
+         outs() << "ASM Error: no register info for target " << MCPU << "\n";
+         return -1;
+     }
+ #if LLVM_VERSION_MAJOR > 9
+     std::unique_ptr<const MCAsmInfo> MAI(
+-            TheTarget->createMCAsmInfo(*MRI, TripleName, MCOptions));
++            TheTarget->createMCAsmInfo(*MRI, TheTriple, MCOptions));
+ #else
+     std::unique_ptr<const MCAsmInfo> MAI(
+             TheTarget->createMCAsmInfo(*MRI, TripleName));
+@@ -326,14 +326,16 @@ int Assembler::RunAssemble(const char* const AssemblySource) {
+         return -1;
+     }
+     std::unique_ptr<MCSubtargetInfo> STI(
+-            TheTarget->createMCSubtargetInfo(TripleName, MCPU, std::string()));
++            TheTarget->createMCSubtargetInfo(TheTriple, MCPU, std::string()));
+     if (!STI || !STI->isCPUStringValid(MCPU)) {
+         outs() << "ASM Error: no subtarget info for target " << MCPU << "\n";
+         return -1;
+     }
+ 
+     // Set up the MCContext for creating symbols and MCExpr's
+-#if LLVM_VERSION_MAJOR > 12
++#if LLVM_VERSION_MAJOR >= 23
++    MCContext Ctx(TheTriple, *MAI, *MRI, *STI, &SrcMgr);
++#elif LLVM_VERSION_MAJOR > 12
+     MCContext Ctx(TheTriple, MAI.get(), MRI.get(), STI.get(), &SrcMgr, &MCOptions);
+ #else
+     MCObjectFileInfo MOFI;
+@@ -359,18 +361,29 @@ int Assembler::RunAssemble(const char* const AssemblySource) {
+ 	    return -1;
+     }
+ 
++#if LLVM_VERSION_MAJOR >= 23
++    std::unique_ptr<MCStreamer> Streamer(TheTarget->createMCObjectStreamer(
++        TheTriple, Ctx,
++        std::unique_ptr<MCAsmBackend>(MAB), MAB->createObjectWriter(*OS),
++        std::unique_ptr<MCCodeEmitter>(CE), *STI));
++#else
+     std::unique_ptr<MCStreamer> Streamer(TheTarget->createMCObjectStreamer(
+         TheTriple, Ctx,
+         std::unique_ptr<MCAsmBackend>(MAB), MAB->createObjectWriter(*OS),
+         std::unique_ptr<MCCodeEmitter>(CE), *STI, MCOptions.MCRelaxAll,
+         MCOptions.MCIncrementalLinkerCompatible, /*DWARFMustBeAtTheEnd*/ false));
++#endif
+ 
+     std::unique_ptr<MCAsmParser> Parser(
+             createMCAsmParser(SrcMgr, Ctx, *Streamer, *MAI));
+ 
+     // Set parser to target parser and run
+     std::unique_ptr<MCTargetAsmParser> TAP(
++#if LLVM_VERSION_MAJOR >= 23
++            TheTarget->createMCAsmParser(*STI, *Parser, *MCII));
++#else
+             TheTarget->createMCAsmParser(*STI, *Parser, *MCII, MCOptions));
++#endif
+     if (!TAP) {
+         outs() << "ASM Error: no assembly parsing support for target " << MCPU << "\n";
+         return -1;
+diff --git a/libhsakmt/tests/kfdtest/src/ShaderStore.cpp b/libhsakmt/tests/kfdtest/src/ShaderStore.cpp
+index ed3c602..9b3c6eb 100644
+--- a/libhsakmt/tests/kfdtest/src/ShaderStore.cpp
++++ b/libhsakmt/tests/kfdtest/src/ShaderStore.cpp
+@@ -149,6 +149,16 @@ const char *CopyDwordIsa =
+             FLAT_LOAD_DWORD_NSS v4, v[0:1] scope:SCOPE_SYS
+             s_wait_loadcnt 0
+             FLAT_STORE_DWORD_NSS v[2:3], v4 scope:SCOPE_SYS
++        .elseif (.amdgcn.gfx_generation_number == 7)
++            // PS4 (Liverpool/Gladius): FLAT hangs the GPU. Use MUBUF addr64,
++            // rsrc = {base 0, 0, 0, 0x100f000}, 64-bit address in v[n:n+1].
++            s_mov_b32 s4, 0
++            s_mov_b32 s5, 0
++            s_mov_b32 s6, 0
++            s_mov_b32 s7, 0x100f000
++            buffer_load_dword v4, v[0:1], s[4:7], 0 addr64 glc slc
++            s_waitcnt 0
++            buffer_store_dword v4, v[2:3], s[4:7], 0 addr64 glc slc
+         .else
+             FLAT_LOAD_DWORD_NSS v4, v[0:1] glc slc
+             s_waitcnt 0
+diff --git a/runtime/hsa-runtime/core/inc/amd_elf_image.hpp b/runtime/hsa-runtime/core/inc/amd_elf_image.hpp
+index 177465c..fbedc7b 100644
+--- a/runtime/hsa-runtime/core/inc/amd_elf_image.hpp
++++ b/runtime/hsa-runtime/core/inc/amd_elf_image.hpp
+@@ -43,6 +43,7 @@
+ #ifndef AMD_ELF_IMAGE_HPP_
+ #define AMD_ELF_IMAGE_HPP_
+ 
++#include <cstdint>
+ #include <string>
+ #include <sstream>
+ #include <vector>
+diff --git a/runtime/hsa-runtime/core/runtime/amd_aql_queue.cpp b/runtime/hsa-runtime/core/runtime/amd_aql_queue.cpp
+index f8613db..4191470 100644
+--- a/runtime/hsa-runtime/core/runtime/amd_aql_queue.cpp
++++ b/runtime/hsa-runtime/core/runtime/amd_aql_queue.cpp
+@@ -1675,8 +1675,30 @@ void AqlQueue::ExecutePM4(uint32_t* cmd_data, size_t cmd_size_b, hsa_fence_scope
+ 
+   // Wait for the packet to be consumed.
+   if (agent_->supported_isas()[0]->GetMajorVersion() <= 8) {
+-    while (queue->LoadReadIndexRelaxed() <= write_idx)
++    // PS4 bring-up: bounded wait with diagnostics instead of spinning forever.
++    const char* ps4_to = getenv("PS4_PM4_TIMEOUT_MS");
++    uint64_t ps4_limit_ms = ps4_to ? strtoull(ps4_to, nullptr, 0) : 0;
++    timespec ps4_t0; clock_gettime(CLOCK_MONOTONIC, &ps4_t0);
++    while (queue->LoadReadIndexRelaxed() <= write_idx) {
+       os::YieldThread();
++      if (ps4_limit_ms) {
++        timespec t; clock_gettime(CLOCK_MONOTONIC, &t);
++        uint64_t ms = (t.tv_sec - ps4_t0.tv_sec) * 1000ull + (t.tv_nsec - ps4_t0.tv_nsec) / 1000000ll;
++        if (ms > ps4_limit_ms) {
++          const char* mk = getenv("PS4_PM4_MARKER");
++          volatile uint32_t* marker = mk ? (volatile uint32_t*)strtoull(mk, nullptr, 0) : nullptr;
++          fprintf(stderr,
++                  "[ps4] ExecutePM4 TIMEOUT after %llu ms: write_idx=%llu read_idx=%llu "
++                  "slot[0]=0x%08x (wrote 0x%08x) max_legacy_db=%llu marker=0x%08x\n",
++                  (unsigned long long)ms, (unsigned long long)write_idx,
++                  (unsigned long long)queue->LoadReadIndexRelaxed(), queue_slot[0], slot_data[0],
++                  (unsigned long long)queue->amd_queue_.max_legacy_doorbell_dispatch_id_plus_1,
++                  marker ? *marker : 0);
++          fflush(stderr);
++          _exit(77);
++        }
++      }
++    }
+ 
+     if (in_signal) hsa_signal_store_screlease(*in_signal, 0);
+   } else if (!in_signal) {
+diff --git a/runtime/hsa-runtime/core/runtime/amd_gpu_agent.cpp b/runtime/hsa-runtime/core/runtime/amd_gpu_agent.cpp
+index 2f8df06..d93dbad 100644
+--- a/runtime/hsa-runtime/core/runtime/amd_gpu_agent.cpp
++++ b/runtime/hsa-runtime/core/runtime/amd_gpu_agent.cpp
+@@ -2298,6 +2298,40 @@ void GpuAgent::InvalidateCodeCaches(void *ptr, size_t size) {
+     assert(false && "Code cache invalidation not implemented for this agent");
+   }
+ 
++  // PS4 (gfx7 Liverpool/Gladius) bring-up switch, PS4_ICACHE_MODE:
++  //   skip    - do not invalidate at all
++  //   probe   - run a single WRITE_DATA through the same ExecutePM4 path and report
++  //   kfdtest - ACQUIRE_MEM with the parameters kfdtest uses (whole range, poll 4)
++  //   (unset) - stock behaviour
++  const char* ps4_mode = getenv("PS4_ICACHE_MODE");
++  if (isa_->GetMajorVersion() == 7 && ps4_mode != nullptr) {
++    if (!strcmp(ps4_mode, "skip")) return;
++    if (!strcmp(ps4_mode, "probe")) {
++      static volatile uint32_t* marker = nullptr;
++      if (marker == nullptr) marker = (volatile uint32_t*)system_allocator()(0x1000, 0x1000, 0);
++      *marker = 0x11111111;
++      uint32_t wd[5];
++      wd[0] = PM4_HDR(PM4_HDR_IT_OPCODE_WRITE_DATA, 5, 7);
++      wd[1] = (5 << 8) | PM4_WRITE_DATA_WR_CONFIRM_WAIT_CONFIRMATION;  // dst_sel = memory
++      { uint64_t ma = uintptr_t(marker); wd[2] = uint32_t(ma) & 0xFFFFFFFCu; wd[3] = uint32_t(ma >> 32); }
++      wd[4] = 0xC0DEF00D;
++      setenv("PS4_PM4_MARKER", std::to_string(uintptr_t(marker)).c_str(), 1);
++      queues_[QueueUtility]->ExecutePM4(wd, sizeof(wd));
++      fprintf(stderr, "[ps4] ExecutePM4 probe returned, marker=0x%08x (want 0xc0def00d)\n", *marker);
++      return;
++    }
++    if (!strcmp(ps4_mode, "kfdtest")) {
++      uint32_t am[7] = {0};
++      am[0] = PM4_HDR(PM4_HDR_IT_OPCODE_ACQUIRE_MEM, 7, 7);
++      am[1] = 0x28c00000;
++      am[2] = 0xFFFFFFFF;
++      am[6] = 4;
++      queues_[QueueUtility]->ExecutePM4(am, sizeof(am));
++      fprintf(stderr, "[ps4] ExecutePM4 kfdtest-style ACQUIRE_MEM returned\n");
++      return;
++    }
++  }
++
+   // Invalidate caches which may hold lines of code object allocation.
+   uint32_t cache_inv[8] = {0};
+   uint32_t cache_inv_size_dw;
+diff --git a/runtime/hsa-runtime/core/runtime/blit_shaders/CMakeLists.txt b/runtime/hsa-runtime/core/runtime/blit_shaders/CMakeLists.txt
+index e63d380..5d73752 100644
+--- a/runtime/hsa-runtime/core/runtime/blit_shaders/CMakeLists.txt
++++ b/runtime/hsa-runtime/core/runtime/blit_shaders/CMakeLists.txt
+@@ -49,7 +49,7 @@ find_package(Clang REQUIRED HINTS ${CMAKE_PREFIX_PATH}/llvm PATHS /opt/rocm/llvm
+ find_package(LLVM REQUIRED HINTS ${CMAKE_PREFIX_PATH}/llvm PATHS /opt/rocm/llvm )
+ 
+ # Set the target devices
+-set (TARGET_DEVS "gfx900;gfx940;gfx1010;gfx1030;gfx1100;gfx1200")
++set (TARGET_DEVS "gfx900;gfx942;gfx1010;gfx1030;gfx1100;gfx1200")
+ 
+ # Set the postfix for each target device
+ set (POSTFIX "9;940;1010;10;11;12")
+diff --git a/runtime/hsa-runtime/core/runtime/trap_handler/CMakeLists.txt b/runtime/hsa-runtime/core/runtime/trap_handler/CMakeLists.txt
+index 6f37e9e..2785073 100644
+--- a/runtime/hsa-runtime/core/runtime/trap_handler/CMakeLists.txt
++++ b/runtime/hsa-runtime/core/runtime/trap_handler/CMakeLists.txt
+@@ -46,7 +46,7 @@ cmake_minimum_required ( VERSION 3.7 )
+ find_package(Clang REQUIRED HINTS ${CMAKE_PREFIX_PATH}/llvm PATHS /opt/rocm/llvm )
+ find_package(LLVM REQUIRED HINTS ${CMAKE_PREFIX_PATH}/llvm PATHS /opt/rocm/llvm )
+ 
+-set (TARGET_DEVS "gfx900;gfx940;gfx941;gfx942;gfx950;gfx1010;gfx1030;gfx1100;gfx1200")
++set (TARGET_DEVS "gfx900;gfx942;gfx942;gfx942;gfx950;gfx1010;gfx1030;gfx1100;gfx1200")
+ set (POSTFIX "9;940;941;942;950;1010;10;11;12")
+ set (SOURCE_SUFFIX ";;;;;;;;_gfx12")
+ 

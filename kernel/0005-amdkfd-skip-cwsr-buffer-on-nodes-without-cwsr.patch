@@ -1,0 +1,29 @@
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_queue.c b/drivers/gpu/drm/amd/amdkfd/kfd_queue.c
+index 910d695bb..2feb0fbc2 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_queue.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_queue.c
+@@ -317,6 +317,14 @@ int kfd_queue_acquire_buffers(struct kfd_process_device *pdd, struct queue_prope
+ 		goto out_err_unreserve;
+ 	}
+ 
++	/*
++	 * ps4: nodes without CWSR (cwsr_size 0, e.g. PS4 Liverpool/Gladius) have
++	 * no save/restore area. User space passes address 0, and looking it up
++	 * failed every compute queue create with -EINVAL.
++	 */
++	if (!topo_dev->node_props.cwsr_size)
++		goto out_unreserve;
++
+ 	total_cwsr_size = (u64)properties->ctx_save_restore_area_size +
+ 			  topo_dev->node_props.debug_memory_size;
+ 	if (check_mul_overflow(total_cwsr_size,
+@@ -372,6 +380,9 @@ int kfd_queue_release_buffers(struct kfd_process_device *pdd, struct queue_prope
+ 	topo_dev = kfd_topology_device_by_id(pdd->dev->id);
+ 	if (!topo_dev)
+ 		return -EINVAL;
++	/* ps4: matches acquire: no CWSR area was acquired on cwsr_size 0 nodes */
++	if (!topo_dev->node_props.cwsr_size)
++		return 0;
+ 	total_cwsr_size = (u64)properties->ctx_save_restore_area_size +
+ 			  topo_dev->node_props.debug_memory_size;
+ 	if (check_mul_overflow(total_cwsr_size,

@@ -154,6 +154,38 @@ That's the next optimisation target.
 - The PS4 user partition is `/dev/mapper/ps4hdd` (UFS2), already mounted rw by the initramfs. A second mount must reuse that superblock (`mount` + `remount,bind,ro`); a plain `-o ro` mount is refused.
 - The kernel lives at `/data/linux/boot/bzImage` on that partition. The root filesystem is a loop image (`/user/app/linux.img`).
 
+## 2c. ROCm 6.4.4 + kfdtest on KFD (2026-11-25): first KFD compute on a PS4
+
+ROCr/libhsakmt `rocm-6.4.4` (the last release with the legacy doorbell path) and kfdtest were built on the Pro (clang/LLVM 23, cmake 4.5).
+`rocm/rocr-6.4.4-ps4-gfx7.patch` holds the toolchain fixes and the kfdtest no-FLAT shader. The parts that matter:
+- `kfdtest/ShaderStore.cpp`: `CopyDwordIsa` gfx7 → `buffer_load/store_dword … addr64`, rsrc `{0,0,0,0x100f000}`.
+- `libhsakmt/queues.c`: the CWSR workaround is superseded by kernel patch `0005`.
+
+| kfdtest | result |
+|---|---|
+| `KFDTopologyTest.*` (7) | PASS |
+| `KFDQMTest.CreateDestroyCpQueue` | PASS (once the CWSR bug is worked around; see 0005) |
+| `KFDQMTest.SubmitNopCpQueue` | PASS (12 ms) |
+| `KFDQMTest.EmptyDispatch` | **PASS (13 ms): first wave launch under KFD; the EOP event arrived** |
+| `KFDQMTest.SimpleWriteDispatch` (no-FLAT shader) | **PASS: a shader read and wrote memory correctly through a KFD PM4 queue** |
+| `KFDQMTest.SubmitPacketCpQueue` | PASS |
+| `KFDQMTest.CreateAqlCpQueue` | PASS (create/destroy only) |
+
+HSA: `hsa_init` works and lists the agent as **`gfx701`, 36 CUs**. A clang `-mcpu=hawaii` no-FLAT code object compiles clean.
+**Blocker: AQL.** ROCr's first GPU work (`hsa_executable_freeze` → `InvalidateCodeCaches` → PM4 inside the AQL utility queue)
+never retires. A probe showed the MEC executed the slot's PM4 and IB, but it **never advanced the read index**. The
+gladius MEC firmware apparently doesn't implement AQL (`RELEASE_MEM` event index 7 / AQL packet processing).
+Result: `cp queue preemption time out` → `Failed to evict process queues` → after 3 hangs a kfdtest process stuck in D
+state, and KFD needed a reboot. Vulkan still worked.
+**So:** stock ROCr can't dispatch on this firmware. The way forward is a **PM4-queue dispatch path**: an
+HSA-compatible bridge that submits code objects the way kfdtest does (`DISPATCH_DIRECT` on a PM4 compute queue).
+
+Kernel side:
+- `0005`: `kfd_queue_acquire/release_buffers()` looked up a CWSR save area even on nodes with `cwsr_size 0`,
+  so every compute queue create failed with `EINVAL`. Skipped now.
+- The ATC handshake works: there was no `ATC PASID mapping not acked`.
+- One unexplained `WARN_ONCE` happened during the first queue run: `FW bug: No PASID in KFD interrupt` (vmid 8, pasid 0).
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
