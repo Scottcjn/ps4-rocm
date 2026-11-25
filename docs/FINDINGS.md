@@ -88,10 +88,36 @@ The patch is written but not yet in this repo.
 | vkbisect, all 12 combinations | 8 HANG | **12 OK, 0 GPU timeouts** |
 | meta fill shader ISA | `flat_store_dwordx2` | `buffer_store_dwordx2` |
 | llama.cpp `test-backend-ops -o ADD` | device lost | **173/173 passed** |
-| llama.cpp `test-backend-ops -o MUL_MAT` | device lost | 2359 cases OK, then **one case hangs** (hard reset) |
+| llama.cpp `test-backend-ops -o MUL_MAT` | device lost | **2636/2636 passed** (after the queue fix below) |
 
-The remaining MUL_MAT hang is being bisected: something besides FLAT/b128, possibly `ds_read2_b64`, subgroup ops, or
-large-workgroup shaders.
+**Second bug: the compute queues.** After the FLAT fix, one MUL_MAT job still hung, always on a compute ring
+(`ring comp_1.0.1 timeout`, hard reset), and always at the same submission in the full run. It passed alone.
+- llama.cpp used RADV's compute queue plus the GFX queue (transfers via meta compute shaders).
+- The hang didn't follow shader code, ISA, buffers or VAs. It moved when the submission layout changed, and it
+  vanished when every submit was waited on, or when everything ran on the GFX ring.
+
+Fix (in the Mesa patch): RADV exposes no compute queue on the PS4 PCI IDs. The root trigger is not identified (hypothesis:
+compute rings + GFX-ring compute on the same context). Upstream already disables compute queues on GFX6.
+
+### First llama.cpp numbers on the PS4 Pro GPU (2026-11-25, llama.cpp 244640b, patched Mesa 26.3.1)
+
+`llama-bench -p 128 -n 32`. The GPU column is `-ngl 99`; the CPU column is `-ngl 0 -t 8` with the GPU hidden.
+
+| model | test | GPU (tok/s) | CPU 8×Jaguar (tok/s) |
+|---|---|---|---|
+| Qwen3 0.6B Q8_0 | pp128 | **1164** | 54 |
+| Qwen3 0.6B Q8_0 | tg32 | 22.9 | 22.9 |
+| Qwen3 4B Q4_K_M | pp128 | **94** | — |
+| Qwen3 4B Q4_K_M | tg32 | 6.7 | 5.6 |
+
+Prompt processing is ~21× the CPU. **Generation is barely faster than the CPU.** 6.7 tok/s × 2.3 GB ≈ 16 GB/s effective,
+versus ~218 GB/s of GDDR5, and Garlic reports ~45 tok/s on a 9B on this console. Generation is limited by something other than
+bandwidth. Suspects:
+- per-token submit latency,
+- the single GFX queue,
+- the GPU left at its boot clock (dmesg `SCLK … DID=16`, "leave strap").
+
+That's the next optimisation target.
 
 ## 3. Platform gotchas (all handled in the scripts)
 
