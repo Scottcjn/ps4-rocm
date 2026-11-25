@@ -6,7 +6,10 @@ Run AI models on the PS4's GPU under Linux. The work has three parts:
 2. **Vulkan (Mesa RADV) fixes** so that llama.cpp and other Vulkan compute stops hanging the GPU.
 3. **Cluster tooling**: repeatable installers that turn any jailbroken PS4 running Linux into an inference node. A PS4 Pro acts as the head node.
 
-> Status: **early, active.** We found the root cause of the hang. The KFD kernel patch is written but not yet booted. See [docs/FINDINGS.md](docs/FINDINGS.md).
+> Status (2026-11-25):
+> - **KFD boots on a PS4 Pro.** `/dev/kfd` is up and the GPU is listed as gfx701 with 36 CUs.
+> - **llama.cpp runs on the PS4 Pro GPU** through a patched Mesa RADV: MUL_MAT 2636/2636, 0.6B prompt processing ~0.8–1.2k tok/s.
+> - **Next:** ROCm 6.4.4 user space. See [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Key finding: FLAT memory instructions hang the PS4 GPU
 

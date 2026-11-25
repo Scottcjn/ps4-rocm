@@ -71,7 +71,26 @@ Checked and fine: doorbell BAR 2 is 8 MiB; MSI interrupts are enabled (`PS4 GPU 
 the SW scheduler (no HWS) for these chips; VMIDs are split 8-15 for KFD. `AMD_IS_APU` is set, so KFD takes the modern
 APU memory path (GTT as public local memory, no IOMMUv2/ATS).
 
-Status: **4 patches, compiles cleanly, not yet booted.**
+Status: **BOOTED, and KFD works on the PS4 Pro (2026-11-25).** As far as we know, this is the first KFD on a PS4. Kernel `7.3.4-Strawberry-Server-FullLTO+ #2`
+with patches 0001–0004, launched by sending GoldHEN's BinLoader (port 9090) `/data/payloads/linux-128mb.elf`.
+
+```
+kfd kfd: Allocated 3969056 bytes on gart
+kfd kfd: Total number of KFD nodes to be created: 1
+amdgpu: SW scheduler is used
+kfd kfd: added device 1002:9924
+/dev/kfd  crw-rw-rw- root render
+```
+KFD topology node 1, `gladius`:
+- `gfx_target_version 70001`, `simd_count 144` (= 36 CU × 4), wave 64, LDS 64 KB.
+- `fw_version 421`, `num_sdma_engines 2`, `num_cp_queues 24`.
+- One public mem bank of 3.9 GB (GTT, the APU path).
+- `capability 0x280`: doorbell type 0 (legacy), so ROCr **6.4.4** is the last runtime that accepts it.
+
+Cosmetic: `cu_per_simd_array 10` is the max, not the 9 active. No KFD errors, no oops, and no ATC-timeout warning at boot.
+Regression check on the new kernel (patched Mesa):
+- vkbisect is all OK and there are 0 GPU timeouts.
+- llama-bench 0.6B: tg32 is unchanged (23.0 tok/s), but **pp128 dropped 1164 → 790 tok/s**. Not explained yet; suspects are the GPU clock state or the KFD GTT reservation.
 
 Building the kernel needs the firmware blobs that the running kernel has built in (`mrvl/sd8797_uapsta.bin` can't be downloaded by `build.sh`). `tools/extract-builtin-fw.py` lifts all 37 of them byte-for-byte from the running `bzImage`.
 
@@ -149,7 +168,7 @@ requires typing `YES`, so reboots don't wipe the install.
 
 ## Next
 
-1. Boot the KFD kernel next to the original (keep `bzImage` untouched) → check `/dev/kfd` and the KFD topology.
+1. ~~Boot the KFD kernel~~ ✅ booted; `/dev/kfd` and the topology are good. Next: kfdtest (queue create/destroy, EmptyDispatch).
 2. Mesa ACO patch: gfx7 global memory → MUBUF addr64; no `ds_*_b128` → rerun vkbisect + llama-bench.
 3. ROCr/ROCT + LLVM gfx701 with `-flat-for-global` off → hello-world HIP/OpenCL kernel.
 4. Benchmarks: Linux Vulkan vs Garlic on the same Pro, same model.
