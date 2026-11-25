@@ -1,0 +1,5 @@
+results/*.gguf
+models/
+results/
+NOTES.private.md
+*.private.*

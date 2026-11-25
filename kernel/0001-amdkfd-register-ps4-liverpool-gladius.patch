@@ -1,0 +1,45 @@
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+index 43029b202..104cdb238 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+@@ -244,12 +244,18 @@ static void kfd_device_info_init(struct kfd_dev *kfd,
+ 		kfd->device_info.event_interrupt_class = &event_interrupt_class_cik;
+ 		kfd->device_info.num_sdma_queues_per_engine = 2;
+ 
++		/* ps4: no CWSR trap-handler firmware for gfx7 (Liverpool/Gladius) */
+ 		if (asic_type != CHIP_KAVERI &&
+ 		    asic_type != CHIP_HAWAII &&
++		    asic_type != CHIP_LIVERPOOL &&
++		    asic_type != CHIP_GLADIUS &&
+ 		    asic_type != CHIP_TONGA)
+ 			kfd->device_info.supports_cwsr = true;
+ 
+-		if (asic_type != CHIP_HAWAII && !vf)
++		/* ps4: the GPU sits on the APU's internal bus, no PCIe atomics */
++		if (asic_type != CHIP_HAWAII &&
++		    asic_type != CHIP_LIVERPOOL &&
++		    asic_type != CHIP_GLADIUS && !vf)
+ 			kfd->device_info.needs_pci_atomics = true;
+ 	}
+ }
+@@ -283,6 +289,20 @@ struct kfd_dev *kgd2kfd_probe(struct amdgpu_device *adev, bool vf)
+ 		else if (!vf)
+ 			f2g = &gfx_v7_kfd2kgd;
+ 		break;
++	/*
++	 * ps4 (Elyan Labs): register the PS4 GPUs with KFD so /dev/kfd exists for ROCm.
++	 * The rest of the PS4 KFD plumbing (CRAT cache info, apertures, packet/queue
++	 * managers) is already in this tree; only the probe entry was missing.
++	 * Modelled on Hawaii (dGPU-style, gfx701): Kaveri's APU path wants IOMMUv2/ATS.
++	 * NOTE: FLAT memory instructions hang these GPUs (Garlic LLM, and vkbisect on
++	 * Gladius 2026-11-25) — user space must compile with -mattr=-flat-for-global.
++	 */
++	case CHIP_LIVERPOOL:
++	case CHIP_GLADIUS:
++		gfx_target_version = 70001;
++		if (!vf)
++			f2g = &gfx_v7_kfd2kgd;
++		break;
+ #endif
+ 	case CHIP_TONGA:
+ 		gfx_target_version = 80002;

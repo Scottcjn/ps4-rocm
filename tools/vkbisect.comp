@@ -1,0 +1,6 @@
+#version 450
+// Trivial compute: out[i] = i. Descriptor SSBO only (no buffer_device_address), no shared memory,
+// no subgroup ops — the smallest dispatch RADV can make.
+layout(local_size_x = 64) in;
+layout(std430, binding = 0) buffer Out { uint v[]; } o;
+void main() { o.v[gl_GlobalInvocationID.x] = gl_GlobalInvocationID.x; }
