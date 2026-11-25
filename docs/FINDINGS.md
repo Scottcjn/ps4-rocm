@@ -206,10 +206,31 @@ dispatches it with `DISPATCH_DIRECT` on a KFD PM4 compute queue (kfdtest-derived
 
 **The GPU memory path tops out at ~18 GB/s read**, which matches llama.cpp generation (~16 GB/s effective). This is the
 real token-generation bottleneck. More waves, 16-byte loads, pinned GTT and CU masks all leave it unchanged.
-**Hypothesis (unproven):** under Linux, KFD/RADV buffers live in GTT (system memory, snooped), which on the PS4 goes over the
-coherent "Onion" path rather than the GPU's fast "Garlic" path. Only the 128 MiB VRAM carve-out (`linux-128mb.elf`) would
-use the fast path. The ps4-linux payload supports **1–5 GB VRAM via `vram.txt`**. Test: boot with a large carve-out, put a
-buffer in VRAM, and re-run `t_copybw`.
+**SOLVED: it's CPU-cached (snooped) vs write-combined memory, not VRAM vs GTT** (`tests/t_vrambw`, `vk/vkbw`, 2026-11-25).
+
+| memory | GPU read | write | copy |
+|---|---|---|---|
+| CPU-cached GTT / userptr (KFD default, llama.cpp default) | 18 GB/s | 7.3 | 9.0 |
+| real VRAM carve-out (Vulkan DEVICE_LOCAL) | 161–164 | 107 | 57 |
+| **write-combined GTT** (`AMDGPU_GEM_CREATE_CPU_GTT_USWC`, or Vulkan HOST_VISIBLE non-cached) | **167–176** | **111** | **56** |
+
+Cached pages go through the GPU's coherent (snooped) path; WC pages and VRAM don't. **No bigger VRAM carve-out is needed.**
+pm4bridge gained `pm4_import_dmabuf()`: allocate a GTT BO with USWC via libdrm, export it as a dmabuf, import it into KFD.
+
+### llama.cpp: one env var, ~3× token generation
+`GGML_VK_PREFER_HOST_MEMORY=1` puts weights in the host-visible, non-cached memory type, i.e. the fast path:
+
+| model | test | default | **PREFER_HOST_MEMORY=1** |
+|---|---|---|---|
+| Qwen3 0.6B Q8_0 | tg32 | 22.9 | **73.3 tok/s** |
+| Qwen3 0.6B Q8_0 | pp128 | 790 | 853 |
+| Qwen3 4B Q4_K_M | tg32 | 6.6 | **20.5 tok/s** |
+| Qwen3 4B Q4_K_M | pp128 | 94 | 142 |
+
+(`GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM=1` doesn't help: 6.6.) Output is verified correct (4B: "Paris … the Seine"), with 0 GPU timeouts.
+Always run with: `VK_ICD_FILENAMES=$HOME/mesa-ps4/share/vulkan/icd.d/radeon_icd.x86_64.json GGML_VK_PREFER_HOST_MEMORY=1`.
+For comparison, Garlic (native, hand-written kernels) reports ~45 tok/s on a 9B on this console. Next: check whether the 4B is now
+compute-limited (20.5 tok/s × 2.3 GB ≈ 47 GB/s, well under 165 GB/s).
 
 Other findings:
 - kfdtest's `DISPATCH_INITIATOR 0x21` makes gfx7 treat `dim_x` as a *thread* count; the correct value is `0x1` (Garlic's).

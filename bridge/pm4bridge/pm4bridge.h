@@ -56,6 +56,16 @@ int  pm4_shutdown(pm4_ctx *ctx);
 int  pm4_alloc(pm4_ctx *ctx, size_t bytes, unsigned flags, pm4_buf *out);
 int  pm4_free(pm4_ctx *ctx, pm4_buf *buf);
 
+/* Import a dmabuf (e.g. a libdrm amdgpu BO exported with
+ * amdgpu_bo_handle_type_dma_buf_fd) into KFD and map it on the GPU.
+ * out->gpu is the GPU address; out->cpu is NULL (the importer has no CPU
+ * mapping: map the BO with its owner, e.g. amdgpu_bo_cpu_map).
+ * This is the only way to get real VRAM (carve-out) memory into a KFD
+ * process on this machine: KFD own allocations go to GTT (apu_prefer_gtt).
+ * Release with pm4_release_import(), not pm4_free(). */
+int  pm4_import_dmabuf(pm4_ctx *ctx, int fd, size_t bytes, pm4_buf *out);
+int  pm4_release_import(pm4_ctx *ctx, pm4_buf *buf);
+
 /* Load kernel `name` from the amdgcn ELF `path` (looks up `name.kd`).
  * Rejects kernels that need scratch, a dispatch/queue pointer or wave32. */
 int  pm4_load(pm4_ctx *ctx, const char *path, const char *name, pm4_kernel **kern);

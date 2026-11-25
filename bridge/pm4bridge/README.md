@@ -40,6 +40,7 @@ Link an application with:
 | `pm4_init(&ctx)` | Opens KFD, picks the gfx7 node, creates one PM4 compute queue. |
 | `pm4_alloc(ctx, bytes, flags, &buf)` | Host-visible, GPU-mapped memory. `buf.cpu` and `buf.gpu` are the same address. Flags: `PM4_ALLOC_ZERO`, `_EXEC`, `_UNCACHED`, `_NONPAGED`. |
 | `pm4_free(ctx, &buf)` | Unmaps and frees. |
+| `pm4_import_dmabuf(ctx, fd, bytes, &buf)` / `pm4_release_import` | Maps a dmabuf (libdrm amdgpu BO) on the GPU. `buf.cpu` is NULL: map the BO with libdrm. The way to get fast (write-combined) memory. |
 | `pm4_load(ctx, "k.co", "name", &kern)` | Parses the ELF, loads its segments into executable GPU memory, reads `name.kd`. Rejects kernels that need scratch, a dispatch/queue pointer, wave32, relocations, or a non-256-byte-aligned entry. |
 | `pm4_dispatch(ctx, kern, grid_x, block_x, kernarg, size)` | Asynchronous. Runs `ceil(grid_x/block_x)` work groups of `block_x` items. Copies the kernarg block. Returns a fence id (> 0) or a negative `PM4_ERR_*`. |
 | `pm4_wait(ctx, fence, timeout_ms)` | Returns `PM4_OK` once that dispatch and all earlier ones retired and results are CPU-visible, or `PM4_ERR_TIMEOUT`. Never blocks past the timeout. |
@@ -128,13 +129,74 @@ nothing the dispatch side does moves it:
 | `PM4_CU_MASK` 0x1 / 0xf / 0x1ff / 0xffffffff | - | 18.0-19.8 | - |
 
 Sixteen waves already saturate it and four waves reach the full write rate, so
-this is a memory-path limit, not a compute or dispatch limit. It matches the
+this is a memory-path limit, not a compute or dispatch limit (it is the
+snooped path of CPU-cached pages: see "VRAM vs GTT" below). It matches the
 ~16 GB/s seen in llama.cpp generation. Where the limit sits (memory controller
 setup, GPU cache path, clocks) is not determined by these tests.
 
 Matvec shows the same thing: with the matrix stored column-major each wave
 reads 64 consecutive floats and runs at the 18 GB/s ceiling; row-major, where
 the 64 lanes of a wave read 64 different cache lines, gets 7.7 GB/s.
+
+## VRAM vs GTT: the 18 GB/s ceiling is the SNOOPED bit, not the memory pool (2026-11-25)
+
+Question: does the GPU read the 128 MiB VRAM carve-out much faster than GTT
+(system) memory? Short answer: **yes, about 9x, but write-combined GTT memory
+is exactly as fast as VRAM.** What makes memory slow is the CPU caching
+attribute of its pages, not which pool it is in.
+
+Same kernels (`kernels/copybw.cl`), `tests/t_vrambw`, mean of 5 runs, CPU-timed
+(GPU-timed with `PM4_GPU_TS=1` agrees within 1-3 %), all data verified:
+
+| Memory (how it was obtained) | Where it lives | Read GB/s | Write GB/s | Copy GB/s |
+|---|---|---|---|---|
+| `kfd`: `pm4_alloc` (KFD userptr), 256 MB - the old baseline | system RAM, cached | 18.1 | 7.3 | 9.0 |
+| `kfdwc`: `pm4_alloc` NONPAGED+UNCACHED, 256 MB | GTT, cached | 18.1 | 7.3 | 9.0 |
+| `gtt`: libdrm GTT BO, imported, 256 MB | GTT, cached | 18.1 | 7.3 | 9.0 |
+| `vram`: libdrm VRAM BO, imported, 32 MB | **moved to GTT by KFD**, cached | 18.0 | - | - |
+| `gttwc`: libdrm GTT BO with `CPU_GTT_USWC`, imported, 256 MB | GTT, write-combined | **167** | **111** | **56** |
+| `gttwc`, 512 MB, read only | GTT, write-combined | **168** | - | - |
+
+Mixed copies run at the speed of the slow side: `gttwc` -> `kfd` 7.4 GB/s
+(the cached write rate), `kfd` -> `gttwc` 17.6 GB/s (the cached read rate).
+
+Real VRAM can only be measured through Vulkan (`vk/vkbw`, GLSL versions of the
+same three kernels, patched Mesa, 16 dispatches per timed submit):
+
+| Vulkan memory type | Where it lives (sysfs + fdinfo) | Read | Write | Copy |
+|---|---|---|---|---|
+| type 5, HOST_CACHED, 32 MB | GTT, cached | 18.2 | 7.2 | 9.3 |
+| type 3, DEVICE_LOCAL+HOST_VISIBLE, 32 MB | **VRAM** (`mem_info_vram_used` +32 MiB per buffer, 0 evicted) | 161 | 107 | 57 |
+| same, 48 MB pair / 96 MB read only | VRAM (108.7 of 128 MiB used) | 162 / 164 | 108 | 58 |
+| type 2, HOST_VISIBLE not cached, 32 MB | GTT, write-combined (`vram_used` unchanged) | 159 | 110 | 56 |
+
+What this means:
+
+- amdgpu sets `AMDGPU_PTE_SNOOPED` in the GPU page table for pages whose TTM
+  caching is "cached" and leaves it clear for write-combined pages and for
+  VRAM. On this console a snooped access is ~9x slower for reads and ~15x for
+  writes. (The bit is inferred from the amdgpu source and from the behaviour
+  above; the page tables were not dumped.)
+- **A bigger VRAM carve-out is not needed for bandwidth.** Any GTT buffer
+  created with `AMDGPU_GEM_CREATE_CPU_GTT_USWC` gets the fast path, up to the
+  GTT size (3.9 GiB here), with the stock 128 MiB carve-out.
+- KFD cannot produce such memory by itself: userptr and KFD GTT BOs are
+  always cached (`HsaMemFlags.Uncached` changes nothing here), and a VRAM BO
+  imported into KFD is migrated to GTT at import/map time (`apu_prefer_gtt`)
+  and becomes cached memory. The working route is
+  `amdgpu_bo_alloc(GTT, CPU_GTT_USWC)` -> `amdgpu_bo_export(dma_buf_fd)` ->
+  `pm4_import_dmabuf()`; see `mem_get()` in `tests/t_vrambw.c`.
+- CPU reads from write-combined memory are slow (uncached). Use it for data
+  the GPU reads and the CPU only writes (weights), and `memcpy` out in one
+  pass when the CPU needs a result.
+- 167-176 GB/s may now be limited by the kernel/shader loop and not by
+  memory: it was not checked against wave counts.
+
+Run: `./run.sh t_vrambw 120 <MB> <src kind> <dst kind|none> [iters] [reps]`
+(`VRAMBW_STEPS=1` prints where each BO lives after every step) and
+`vk/run.sh <MB> vram|gtt|gttwc <kind|none> [iters] [reps] [passes]`
+(`make vk` builds it; it refuses to run without the patched-Mesa ICD).
+Logs: `logs/t_vrambw.log`, `logs/vkbw.log`. No hangs, trouble count 0 throughout.
 
 ## Differences from kfdtest and from the Garlic register facts
 
@@ -175,7 +237,7 @@ the 64 lanes of a wave read 64 different cache lines, gets 7.7 GB/s.
   still destroy the queue, which makes KFD try to preempt it.
 - Dynamic LDS sizing is implemented (`group_segment_fixed_size` -> `RSRC2`)
   but no test uses LDS.
-- Write bandwidth is about 40 % of read bandwidth; the reason is not known.
+- On cached memory write bandwidth is about 40 % of read bandwidth; on write-combined memory it is about 65 %. The reason is not known.
 
 ## Safety
 

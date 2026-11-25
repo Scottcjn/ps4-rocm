@@ -1,0 +1,582 @@
+== 2026-11-25T22:10:51+00:00 t_vrambw 32 kfd kfd (timeout 60s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2 MiB
+    fdinfo drm-resident-vram:	136 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	136 KiB
+    fdinfo amd-requested-gtt:	2048 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	144 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	144 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+src kfd gpu 0x600000  dst kfd gpu 0x2a00000
+[mem after alloc+import+map] sysfs vram_used 12.61 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	288 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	288 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	288 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+read  rep 0:   1.874 ms  17.91 GB/s gpu_ticks 185690
+read  rep 1:   1.857 ms  18.07 GB/s gpu_ticks 184393
+read  rep 2:   1.874 ms  17.91 GB/s gpu_ticks 186117
+read  rep 3:   1.843 ms  18.20 GB/s gpu_ticks 183066
+read  rep 4:   1.866 ms  17.98 GB/s gpu_ticks 185328
+SUMMARY read  src=kfd   dst=-      32 MB iters  64: mean  18.01 GB/s  best  18.20 GB/s  gpu-timed  18.15 GB/s  (n=5, mismatches 0)
+copy  rep 0:   3.672 ms   9.14 GB/s copied gpu_ticks 363005
+copy  rep 1:   3.742 ms   8.97 GB/s copied gpu_ticks 370998
+copy  rep 2:   3.737 ms   8.98 GB/s copied gpu_ticks 369364
+copy  rep 3:   3.748 ms   8.95 GB/s copied gpu_ticks 367999
+copy  rep 4:   3.751 ms   8.95 GB/s copied gpu_ticks 367176
+SUMMARY copy  src=kfd   dst=kfd    32 MB iters  64: mean   9.00 GB/s  best   9.14 GB/s  gpu-timed   9.13 GB/s  (n=5, mismatches 0)
+write rep 0:   4.654 ms   7.21 GB/s gpu_ticks 458145
+write rep 1:   4.612 ms   7.28 GB/s gpu_ticks 458071
+write rep 2:   4.613 ms   7.27 GB/s gpu_ticks 455216
+write rep 3:   4.618 ms   7.27 GB/s gpu_ticks 453749
+write rep 4:   4.613 ms   7.27 GB/s gpu_ticks 457183
+SUMMARY write src=-     dst=kfd    32 MB iters  64: mean   7.26 GB/s  best   7.28 GB/s  gpu-timed   7.35 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.61 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	288 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	288 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	288 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+[mem after free] sysfs vram_used 12.61 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	288 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	288 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	288 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+RESULT PASS vrambw kfd->kfd 32 MB
+== t_vrambw 32 kfd kfd rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:10:52+00:00 t_vrambw 32 vram none (timeout 60s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2 MiB
+    fdinfo drm-resident-vram:	136 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	136 KiB
+    fdinfo amd-requested-gtt:	2048 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	144 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	144 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+  bo vram 32 MB: preferred_heap 0x4 (VRAM=0x4 GTT=0x2) flags 0x208 size 33554432
+src vram gpu 0x400200000  dst none gpu 0
+[mem after alloc+import+map] sysfs vram_used 12.54 MiB  gtt_used 40.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	34824 KiB
+    fdinfo drm-resident-vram:	216 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	34824 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	32768 KiB
+    fdinfo amd-requested-vram:	32984 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+read  rep 0:   1.857 ms  18.07 GB/s gpu_ticks 184027
+read  rep 1:   1.867 ms  17.97 GB/s gpu_ticks 185425
+read  rep 2:   1.855 ms  18.09 GB/s gpu_ticks 184246
+read  rep 3:   1.872 ms  17.92 GB/s gpu_ticks 185978
+read  rep 4:   1.852 ms  18.12 GB/s gpu_ticks 183928
+SUMMARY read  src=vram  dst=-      32 MB iters  64: mean  18.03 GB/s  best  18.12 GB/s  gpu-timed  18.16 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.54 MiB  gtt_used 40.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	34824 KiB
+    fdinfo drm-resident-vram:	216 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	34824 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	32768 KiB
+    fdinfo amd-requested-vram:	32984 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+[mem after free] sysfs vram_used 12.54 MiB  gtt_used 8.67 MiB
+    fdinfo drm-resident-cpu:	0
+    fdinfo drm-resident-gtt:	2056 KiB
+    fdinfo drm-resident-vram:	216 KiB
+    fdinfo drm-resident-gds:	0
+    fdinfo drm-resident-gws:	0
+    fdinfo drm-resident-oa:	0
+    fdinfo drm-resident-doorbell:	0
+    fdinfo drm-resident-mmioremap:	0
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo drm-memory-cpu: 	0 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+    fdinfo amd-requested-vram:	216 KiB
+    fdinfo amd-requested-gtt:	2060 KiB
+RESULT PASS vrambw vram->none 32 MB
+== t_vrambw 32 vram none rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:11:22+00:00 t_vrambw 32 vram none (timeout 60s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo vram 32 MB: preferred_heap 0x4 (VRAM=0x4 GTT=0x2) flags 0x208 size 33554432
+[mem   step: after amdgpu_bo_alloc] sysfs vram_used 44.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	32912 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem   step: after cpu_map + CPU write + export] sysfs vram_used 44.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	32912 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem   step: after KFD import + map] sysfs vram_used 12.54 MiB  gtt_used 40.67 MiB
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	34824 KiB
+    fdinfo amd-evicted-vram:	32768 KiB
+src vram gpu 0x400200000  dst none gpu 0
+[mem after alloc+import+map] sysfs vram_used 12.54 MiB  gtt_used 40.67 MiB
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	34824 KiB
+    fdinfo amd-evicted-vram:	32768 KiB
+read  rep 0:   1.878 ms  17.86 GB/s gpu_ticks 186184
+read  rep 1:   1.846 ms  18.18 GB/s gpu_ticks 183308
+read  rep 2:   1.877 ms  17.88 GB/s gpu_ticks 186385
+read  rep 3:   1.844 ms  18.20 GB/s gpu_ticks 183135
+read  rep 4:   1.871 ms  17.94 GB/s gpu_ticks 185834
+SUMMARY read  src=vram  dst=-      32 MB iters  64: mean  18.01 GB/s  best  18.20 GB/s  gpu-timed  18.14 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.54 MiB  gtt_used 40.67 MiB
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	34824 KiB
+    fdinfo amd-evicted-vram:	32768 KiB
+[mem after free] sysfs vram_used 12.54 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	216 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw vram->none 32 MB
+== t_vrambw 32 vram none rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:15:07+00:00 t_vrambw 256 kfd kfd (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+src kfd gpu 0x600000  dst kfd gpu 0x10a00000
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:  14.795 ms  18.14 GB/s gpu_ticks 1466801
+read  rep 1:  14.764 ms  18.18 GB/s gpu_ticks 1466210
+read  rep 2:  14.849 ms  18.08 GB/s gpu_ticks 1468078
+read  rep 3:  14.860 ms  18.06 GB/s gpu_ticks 1470039
+read  rep 4:  14.803 ms  18.13 GB/s gpu_ticks 1474179
+SUMMARY read  src=kfd   dst=-     256 MB iters  64: mean  18.12 GB/s  best  18.18 GB/s  gpu-timed  18.27 GB/s  (n=5, mismatches 0)
+copy  rep 0:  29.988 ms   8.95 GB/s copied gpu_ticks 2980196
+copy  rep 1:  30.010 ms   8.94 GB/s copied gpu_ticks 2987215
+copy  rep 2:  30.104 ms   8.92 GB/s copied gpu_ticks 2990584
+copy  rep 3:  29.996 ms   8.95 GB/s copied gpu_ticks 2979218
+copy  rep 4:  29.912 ms   8.97 GB/s copied gpu_ticks 2978164
+SUMMARY copy  src=kfd   dst=kfd   256 MB iters  64: mean   8.95 GB/s  best   8.97 GB/s  gpu-timed   9.00 GB/s  (n=5, mismatches 0)
+write rep 0:  36.832 ms   7.29 GB/s gpu_ticks 3661483
+write rep 1:  36.729 ms   7.31 GB/s gpu_ticks 3656394
+write rep 2:  36.762 ms   7.30 GB/s gpu_ticks 3658651
+write rep 3:  36.753 ms   7.30 GB/s gpu_ticks 3660572
+write rep 4:  36.763 ms   7.30 GB/s gpu_ticks 3656119
+SUMMARY write src=-     dst=kfd   256 MB iters  64: mean   7.30 GB/s  best   7.31 GB/s  gpu-timed   7.34 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw kfd->kfd 256 MB
+== t_vrambw 256 kfd kfd rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:15:10+00:00 t_vrambw 256 gttwc gttwc (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+src gttwc gpu 0x400200000  dst gttwc gpu 0x410400000
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:   1.614 ms 166.31 GB/s gpu_ticks 159874
+read  rep 1:   1.602 ms 167.53 GB/s gpu_ticks 159056
+read  rep 2:   1.607 ms 167.08 GB/s gpu_ticks 159488
+read  rep 3:   1.593 ms 168.53 GB/s gpu_ticks 158144
+read  rep 4:   1.594 ms 168.38 GB/s gpu_ticks 158256
+SUMMARY read  src=gttwc dst=-     256 MB iters  64: mean 167.56 GB/s  best 168.53 GB/s  gpu-timed 168.87 GB/s  (n=5, mismatches 0)
+copy  rep 0:   4.724 ms  56.82 GB/s copied gpu_ticks 466812
+copy  rep 1:   4.773 ms  56.24 GB/s copied gpu_ticks 470980
+copy  rep 2:   4.802 ms  55.90 GB/s copied gpu_ticks 468786
+copy  rep 3:   4.806 ms  55.86 GB/s copied gpu_ticks 468998
+copy  rep 4:   4.781 ms  56.14 GB/s copied gpu_ticks 473367
+SUMMARY copy  src=gttwc dst=gttwc 256 MB iters  64: mean  56.19 GB/s  best  56.82 GB/s  gpu-timed  57.14 GB/s  (n=5, mismatches 0)
+write rep 0:   2.458 ms 109.19 GB/s gpu_ticks 234217
+write rep 1:   2.432 ms 110.37 GB/s gpu_ticks 232370
+write rep 2:   2.409 ms 111.45 GB/s gpu_ticks 237144
+write rep 3:   2.325 ms 115.47 GB/s gpu_ticks 230529
+write rep 4:   2.431 ms 110.42 GB/s gpu_ticks 237261
+SUMMARY write src=-     dst=gttwc 256 MB iters  64: mean 111.34 GB/s  best 115.47 GB/s  gpu-timed 114.57 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw gttwc->gttwc 256 MB
+== t_vrambw 256 gttwc gttwc rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:15:49+00:00 t_vrambw 256 gtt gtt (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gtt 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x208 size 268435456
+  bo gtt 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x208 size 268435456
+src gtt gpu 0x400200000  dst gtt gpu 0x410400000
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:  14.783 ms  18.16 GB/s gpu_ticks 1469433
+read  rep 1:  14.799 ms  18.14 GB/s gpu_ticks 1472773
+read  rep 2:  14.868 ms  18.05 GB/s gpu_ticks 1472387
+read  rep 3:  14.747 ms  18.20 GB/s gpu_ticks 1466874
+read  rep 4:  14.775 ms  18.17 GB/s gpu_ticks 1468636
+SUMMARY read  src=gtt   dst=-     256 MB iters  64: mean  18.14 GB/s  best  18.20 GB/s  gpu-timed  18.26 GB/s  (n=5, mismatches 0)
+copy  rep 0:  29.981 ms   8.95 GB/s copied gpu_ticks 2985031
+copy  rep 1:  29.876 ms   8.99 GB/s copied gpu_ticks 2975012
+copy  rep 2:  29.987 ms   8.95 GB/s copied gpu_ticks 2978586
+copy  rep 3:  29.888 ms   8.98 GB/s copied gpu_ticks 2975548
+copy  rep 4:  30.083 ms   8.92 GB/s copied gpu_ticks 2990058
+SUMMARY copy  src=gtt   dst=gtt   256 MB iters  64: mean   8.96 GB/s  best   8.99 GB/s  gpu-timed   9.01 GB/s  (n=5, mismatches 0)
+write rep 0:  36.867 ms   7.28 GB/s gpu_ticks 3663450
+write rep 1:  36.867 ms   7.28 GB/s gpu_ticks 3662884
+write rep 2:  36.836 ms   7.29 GB/s gpu_ticks 3660015
+write rep 3:  36.758 ms   7.30 GB/s gpu_ticks 3656203
+write rep 4:  36.762 ms   7.30 GB/s gpu_ticks 3661644
+SUMMARY write src=-     dst=gtt   256 MB iters  64: mean   7.29 GB/s  best   7.30 GB/s  gpu-timed   7.33 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1192 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw gtt->gtt 256 MB
+== t_vrambw 256 gtt gtt rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:15:53+00:00 t_vrambw 256 kfdwc kfdwc (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+src kfdwc gpu 0x400400000  dst kfdwc gpu 0x410800000
+[mem after alloc+import+map] sysfs vram_used 13.49 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:  14.840 ms  18.09 GB/s gpu_ticks 1468271
+read  rep 1:  14.851 ms  18.07 GB/s gpu_ticks 1470834
+read  rep 2:  14.762 ms  18.18 GB/s gpu_ticks 1467775
+read  rep 3:  14.764 ms  18.18 GB/s gpu_ticks 1468206
+read  rep 4:  14.773 ms  18.17 GB/s gpu_ticks 1468585
+SUMMARY read  src=kfdwc dst=-     256 MB iters  64: mean  18.14 GB/s  best  18.18 GB/s  gpu-timed  18.28 GB/s  (n=5, mismatches 0)
+copy  rep 0:  30.019 ms   8.94 GB/s copied gpu_ticks 2987304
+copy  rep 1:  29.985 ms   8.95 GB/s copied gpu_ticks 2983253
+copy  rep 2:  29.961 ms   8.96 GB/s copied gpu_ticks 2983745
+copy  rep 3:  29.991 ms   8.95 GB/s copied gpu_ticks 2985484
+copy  rep 4:  29.993 ms   8.95 GB/s copied gpu_ticks 2981454
+SUMMARY copy  src=kfdwc dst=kfdwc 256 MB iters  64: mean   8.95 GB/s  best   8.96 GB/s  gpu-timed   9.00 GB/s  (n=5, mismatches 0)
+write rep 0:  36.723 ms   7.31 GB/s gpu_ticks 3657158
+write rep 1:  36.760 ms   7.30 GB/s gpu_ticks 3659996
+write rep 2:  36.760 ms   7.30 GB/s gpu_ticks 3656798
+write rep 3:  36.644 ms   7.33 GB/s gpu_ticks 3647920
+write rep 4:  36.652 ms   7.32 GB/s gpu_ticks 3650693
+SUMMARY write src=-     dst=kfdwc 256 MB iters  64: mean   7.31 GB/s  best   7.33 GB/s  gpu-timed   7.35 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.49 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.49 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw kfdwc->kfdwc 256 MB
+== t_vrambw 256 kfdwc kfdwc rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:15:56+00:00 t_vrambw 256 gttwc kfd (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+src gttwc gpu 0x400200000  dst kfd gpu 0x600000
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 264.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	264200 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:   1.615 ms 166.21 GB/s gpu_ticks 159939
+read  rep 1:   1.612 ms 166.57 GB/s gpu_ticks 159986
+read  rep 2:   1.601 ms 167.63 GB/s gpu_ticks 158954
+read  rep 3:   1.621 ms 165.59 GB/s gpu_ticks 160969
+read  rep 4:   1.592 ms 168.63 GB/s gpu_ticks 158027
+SUMMARY read  src=gttwc dst=-     256 MB iters  64: mean 166.92 GB/s  best 168.63 GB/s  gpu-timed 168.22 GB/s  (n=5, mismatches 0)
+copy  rep 0:  36.504 ms   7.35 GB/s copied gpu_ticks 3630874
+copy  rep 1:  36.453 ms   7.36 GB/s copied gpu_ticks 3630559
+copy  rep 2:  36.657 ms   7.32 GB/s copied gpu_ticks 3641474
+copy  rep 3:  36.561 ms   7.34 GB/s copied gpu_ticks 3634755
+copy  rep 4:  36.526 ms   7.35 GB/s copied gpu_ticks 3631108
+SUMMARY copy  src=gttwc dst=kfd   256 MB iters  64: mean   7.35 GB/s  best   7.36 GB/s  gpu-timed   7.39 GB/s  (n=5, mismatches 0)
+write rep 0:  36.770 ms   7.30 GB/s gpu_ticks 3656506
+write rep 1:  36.755 ms   7.30 GB/s gpu_ticks 3658989
+write rep 2:  36.762 ms   7.30 GB/s gpu_ticks 3657838
+write rep 3:  36.756 ms   7.30 GB/s gpu_ticks 3659821
+write rep 4:  36.839 ms   7.29 GB/s gpu_ticks 3663842
+SUMMARY write src=-     dst=kfd   256 MB iters  64: mean   7.30 GB/s  best   7.30 GB/s  gpu-timed   7.34 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 264.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	264200 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw gttwc->kfd 256 MB
+== t_vrambw 256 gttwc kfd rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:16:05+00:00 t_vrambw 256 kfd gttwc (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+src kfd gpu 0x600000  dst gttwc gpu 0x400200000
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 264.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	264200 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:  14.777 ms  18.17 GB/s gpu_ticks 1468819
+read  rep 1:  14.759 ms  18.19 GB/s gpu_ticks 1465883
+read  rep 2:  14.748 ms  18.20 GB/s gpu_ticks 1466995
+read  rep 3:  14.768 ms  18.18 GB/s gpu_ticks 1469677
+read  rep 4:  14.759 ms  18.19 GB/s gpu_ticks 1468152
+SUMMARY read  src=kfd   dst=-     256 MB iters  64: mean  18.18 GB/s  best  18.20 GB/s  gpu-timed  18.29 GB/s  (n=5, mismatches 0)
+copy  rep 0:  15.309 ms  17.53 GB/s copied gpu_ticks 1515162
+copy  rep 1:  15.203 ms  17.66 GB/s copied gpu_ticks 1513669
+copy  rep 2:  15.201 ms  17.66 GB/s copied gpu_ticks 1511255
+copy  rep 3:  15.292 ms  17.55 GB/s copied gpu_ticks 1514481
+copy  rep 4:  15.303 ms  17.54 GB/s copied gpu_ticks 1515151
+SUMMARY copy  src=kfd   dst=gttwc 256 MB iters  64: mean  17.59 GB/s  best  17.66 GB/s  gpu-timed  17.73 GB/s  (n=5, mismatches 0)
+write rep 0:   2.450 ms 109.59 GB/s gpu_ticks 233188
+write rep 1:   2.433 ms 110.34 GB/s gpu_ticks 233740
+write rep 2:   2.432 ms 110.39 GB/s gpu_ticks 232629
+write rep 3:   2.432 ms 110.39 GB/s gpu_ticks 231987
+write rep 4:   2.325 ms 115.46 GB/s gpu_ticks 230371
+SUMMARY write src=-     dst=gttwc 256 MB iters  64: mean 111.19 GB/s  best 115.46 GB/s  gpu-timed 115.51 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 264.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	264200 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw kfd->gttwc 256 MB
+== t_vrambw 256 kfd gttwc rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:16:39+00:00 t_vrambw 256 gttwc gttwc 256 (timeout 120s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+  bo gttwc 256 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 268435456
+src gttwc gpu 0x400200000  dst gttwc gpu 0x410400000
+[mem after alloc+import+map] sysfs vram_used 13.49 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:   1.525 ms 176.05 GB/s gpu_ticks 150944
+read  rep 1:   1.526 ms 175.94 GB/s gpu_ticks 151403
+read  rep 2:   1.529 ms 175.62 GB/s gpu_ticks 151696
+read  rep 3:   1.540 ms 174.28 GB/s gpu_ticks 152864
+read  rep 4:   1.523 ms 176.20 GB/s gpu_ticks 151209
+SUMMARY read  src=gttwc dst=-     256 MB iters 256: mean 175.62 GB/s  best 176.20 GB/s  gpu-timed 177.04 GB/s  (n=5, mismatches 0)
+copy  rep 0:   4.509 ms  59.54 GB/s copied gpu_ticks 446791
+copy  rep 1:   4.600 ms  58.36 GB/s copied gpu_ticks 451394
+copy  rep 2:   4.593 ms  58.44 GB/s copied gpu_ticks 454352
+copy  rep 3:   4.578 ms  58.64 GB/s copied gpu_ticks 453306
+copy  rep 4:   4.591 ms  58.47 GB/s copied gpu_ticks 454553
+SUMMARY copy  src=gttwc dst=gttwc 256 MB iters 256: mean  58.69 GB/s  best  59.54 GB/s  gpu-timed  59.38 GB/s  (n=5, mismatches 0)
+write rep 0:   2.546 ms 105.45 GB/s gpu_ticks 245593
+write rep 1:   2.540 ms 105.69 GB/s gpu_ticks 244372
+write rep 2:   2.538 ms 105.76 GB/s gpu_ticks 246243
+write rep 3:   2.546 ms 105.42 GB/s gpu_ticks 243500
+write rep 4:   2.539 ms 105.74 GB/s gpu_ticks 245441
+SUMMARY write src=-     dst=gttwc 256 MB iters 256: mean 105.61 GB/s  best 105.76 GB/s  gpu-timed 109.55 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.49 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.49 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1184 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw gttwc->gttwc 256 MB
+== t_vrambw 256 gttwc gttwc 256 rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log
+== 2026-11-25T22:17:23+00:00 t_vrambw 512 gttwc none 64 5 (timeout 200s) env: PM4_GPU_TS=1
+[mem start] sysfs vram_used 12.46 MiB  gtt_used 8.66 MiB
+    fdinfo drm-memory-vram:	136 KiB
+    fdinfo drm-memory-gtt: 	2048 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after pm4_init] sysfs vram_used 12.47 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+  bo gttwc 512 MB: preferred_heap 0x2 (VRAM=0x4 GTT=0x2) flags 0x20c size 536870912
+[mem   step: after amdgpu_bo_alloc] sysfs vram_used 12.47 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem   step: after cpu_map + CPU write + export] sysfs vram_used 12.47 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	144 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem   step: after KFD import + map] sysfs vram_used 13.48 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1176 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+src gttwc gpu 0x400200000  dst none gpu 0
+[mem after alloc+import+map] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+read  rep 0:   3.212 ms 167.14 GB/s gpu_ticks 316866
+read  rep 1:   3.183 ms 168.68 GB/s gpu_ticks 315959
+read  rep 2:   3.182 ms 168.74 GB/s gpu_ticks 315487
+read  rep 3:   3.182 ms 168.73 GB/s gpu_ticks 315899
+read  rep 4:   3.181 ms 168.77 GB/s gpu_ticks 315430
+SUMMARY read  src=gttwc dst=-     512 MB iters  64: mean 168.41 GB/s  best 168.77 GB/s  gpu-timed 169.93 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 13.50 MiB  gtt_used 520.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	526344 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+[mem after free] sysfs vram_used 13.50 MiB  gtt_used 8.67 MiB
+    fdinfo drm-memory-vram:	1200 KiB
+    fdinfo drm-memory-gtt: 	2056 KiB
+    fdinfo amd-evicted-vram:	0 KiB
+RESULT PASS vrambw gttwc->none 512 MB
+== t_vrambw 512 gttwc none 64 5 rc=0 (124=timeout) trouble-count before=0 after=0 log=logs/t_vrambw.log

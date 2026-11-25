@@ -18,3 +18,6 @@ kernels/bad/*.co
 /rocr-latest/
 /rsys/
 /AMDGPU.td
+tests/t_vrambw
+vk/vkbw
+vk/*.spv

@@ -1,0 +1,10 @@
+#version 450
+// write only (kernels/copybw.cl fillbw)
+layout(local_size_x = 256) in;
+layout(std430, binding = 0) readonly buffer S { uint s[]; };
+layout(std430, binding = 1) buffer D { uint d[]; };
+layout(push_constant) uniform PC { uint iters; uint value; } pc;
+void main() {
+    uint i = gl_WorkGroupID.x * 256u * pc.iters + gl_LocalInvocationID.x;
+    for (uint k = 0u; k < pc.iters; k++, i += 256u) d[i] = pc.value + i;
+}

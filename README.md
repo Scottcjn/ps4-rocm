@@ -8,7 +8,9 @@ Run AI models on the PS4's GPU under Linux. The work has three parts:
 
 > Status (2026-11-25):
 > - **KFD boots on a PS4 Pro.** `/dev/kfd` is up and the GPU is listed as gfx701 with 36 CUs.
-> - **llama.cpp runs on the PS4 Pro GPU** through a patched Mesa RADV: MUL_MAT 2636/2636, 0.6B prompt processing ~0.8–1.2k tok/s.
+> - **llama.cpp runs on the PS4 Pro GPU** through a patched Mesa RADV: MUL_MAT 2636/2636. With `GGML_VK_PREFER_HOST_MEMORY=1`, which avoids
+>   the PS4's slow coherent memory path, generation is **73 tok/s (Qwen3 0.6B) / 20.5 tok/s (Qwen3 4B)**.
+> - **pm4bridge** runs clang kernels on KFD PM4 queues, reaching 167 GB/s GPU reads from write-combined memory.
 > - **Next:** ROCm 6.4.4 user space. See [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Key finding: FLAT memory instructions hang the PS4 GPU

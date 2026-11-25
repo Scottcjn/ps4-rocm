@@ -1,0 +1,12 @@
+#version 450
+// read only (kernels/copybw.cl sumbw): binding 1 is the small sum output
+layout(local_size_x = 256) in;
+layout(std430, binding = 0) readonly buffer S { uint s[]; };
+layout(std430, binding = 1) buffer D { uint d[]; };
+layout(push_constant) uniform PC { uint iters; uint value; } pc;
+void main() {
+    uint i = gl_WorkGroupID.x * 256u * pc.iters + gl_LocalInvocationID.x;
+    uint a = 0u;
+    for (uint k = 0u; k < pc.iters; k++, i += 256u) a += s[i];
+    d[gl_WorkGroupID.x * 256u + gl_LocalInvocationID.x] = a;
+}

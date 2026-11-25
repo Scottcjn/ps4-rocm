@@ -1,0 +1,646 @@
+== 2026-11-25T22:13:46+00:00 vkbw 32 vram vram 64 5 4
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 44.55 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	32988 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	32988 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after dst alloc] sysfs vram_used 76.62 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 76.62 MiB  gtt_used 9.25 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2648 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+submit overhead (1 group): cpu mean 139.3 us best 90.8 us, gpu-timed mean 35.6 us
+read  rep 0:    0.912 ms 147.14 GB/s (gpu-timed    0.845 ms)
+read  rep 1:    0.917 ms 146.34 GB/s (gpu-timed    0.842 ms)
+read  rep 2:    0.922 ms 145.52 GB/s (gpu-timed    0.836 ms)
+read  rep 3:    0.981 ms 136.84 GB/s (gpu-timed    0.858 ms)
+read  rep 4:    0.971 ms 138.29 GB/s (gpu-timed    0.848 ms)
+SUMMARY vk read  src=vram  dst=-      32 MB x4 iters  64: mean 142.69 GB/s  best 147.14 GB/s  gpu-timed 158.68 GB/s  (n=5, mismatches 0)
+copy  rep 0:    2.683 ms  50.03 GB/s copied (gpu-timed    2.370 ms)
+copy  rep 1:    2.631 ms  51.01 GB/s copied (gpu-timed    2.413 ms)
+copy  rep 2:    2.744 ms  48.91 GB/s copied (gpu-timed    2.438 ms)
+copy  rep 3:    2.634 ms  50.95 GB/s copied (gpu-timed    2.425 ms)
+copy  rep 4:    2.691 ms  49.87 GB/s copied (gpu-timed    2.425 ms)
+SUMMARY vk copy  src=vram  dst=vram   32 MB x4 iters  64: mean  50.14 GB/s  best  51.01 GB/s  gpu-timed  55.59 GB/s  (n=5, mismatches 0)
+write rep 0:    1.486 ms  90.34 GB/s (gpu-timed    1.215 ms)
+write rep 1:    1.467 ms  91.46 GB/s (gpu-timed    1.235 ms)
+write rep 2:    1.463 ms  91.71 GB/s (gpu-timed    1.231 ms)
+write rep 3:    1.468 ms  91.44 GB/s (gpu-timed    1.237 ms)
+write rep 4:    1.455 ms  92.23 GB/s (gpu-timed    1.238 ms)
+SUMMARY vk write src=-     dst=vram   32 MB x4 iters  64: mean  91.43 GB/s  best  92.23 GB/s  gpu-timed 109.01 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 76.87 MiB  gtt_used 9.58 MiB
+    fd 4 drm-memory-vram:	66088 KiB
+    fd 4 drm-memory-gtt: 	2988 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	66088 KiB
+RESULT PASS vkbw vram->vram 32 MB
+== vkbw 32 vram vram 64 5 4 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:13:59+00:00 vkbw 32 gtt gtt 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after src alloc] sysfs vram_used 12.55 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	220 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	220 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after dst alloc] sysfs vram_used 12.62 MiB  gtt_used 72.75 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	67672 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 12.62 MiB  gtt_used 73.25 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	68184 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+submit overhead (1 group): cpu mean 148.5 us best 105.8 us, gpu-timed mean 51.2 us
+read  rep 0:   29.594 ms  18.14 GB/s (gpu-timed   29.330 ms)
+read  rep 1:   29.534 ms  18.18 GB/s (gpu-timed   29.210 ms)
+read  rep 2:   29.502 ms  18.20 GB/s (gpu-timed   29.176 ms)
+read  rep 3:   29.520 ms  18.19 GB/s (gpu-timed   29.177 ms)
+read  rep 4:   29.441 ms  18.24 GB/s (gpu-timed   29.118 ms)
+SUMMARY vk read  src=gtt   dst=-      32 MB x16 iters  64: mean  18.19 GB/s  best  18.24 GB/s  gpu-timed  18.38 GB/s  (n=5, mismatches 0)
+copy  rep 0:   58.022 ms   9.25 GB/s copied (gpu-timed   57.552 ms)
+copy  rep 1:   57.792 ms   9.29 GB/s copied (gpu-timed   57.317 ms)
+copy  rep 2:   57.821 ms   9.29 GB/s copied (gpu-timed   57.344 ms)
+copy  rep 3:   57.643 ms   9.31 GB/s copied (gpu-timed   57.169 ms)
+copy  rep 4:   58.053 ms   9.25 GB/s copied (gpu-timed   57.577 ms)
+SUMMARY vk copy  src=gtt   dst=gtt    32 MB x16 iters  64: mean   9.28 GB/s  best   9.31 GB/s  gpu-timed   9.35 GB/s  (n=5, mismatches 0)
+write rep 0:   74.411 ms   7.21 GB/s (gpu-timed   73.891 ms)
+write rep 1:   74.411 ms   7.21 GB/s (gpu-timed   73.952 ms)
+write rep 2:   74.373 ms   7.22 GB/s (gpu-timed   73.864 ms)
+write rep 3:   74.477 ms   7.21 GB/s (gpu-timed   73.968 ms)
+write rep 4:   74.404 ms   7.22 GB/s (gpu-timed   73.910 ms)
+SUMMARY vk write src=-     dst=gtt    32 MB x16 iters  64: mean   7.21 GB/s  best   7.22 GB/s  gpu-timed   7.26 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.87 MiB  gtt_used 73.58 MiB
+    fd 4 drm-memory-vram:	552 KiB
+    fd 4 drm-memory-gtt: 	68524 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	552 KiB
+RESULT PASS vkbw gtt->gtt 32 MB
+== vkbw 32 gtt gtt 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:00+00:00 vkbw 32 vram vram 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 44.55 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	32988 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	32988 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after dst alloc] sysfs vram_used 76.62 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 76.62 MiB  gtt_used 9.25 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2648 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+submit overhead (1 group): cpu mean 139.7 us best 93.5 us, gpu-timed mean 35.9 us
+read  rep 0:    3.330 ms 161.23 GB/s (gpu-timed    3.221 ms)
+read  rep 1:    3.328 ms 161.31 GB/s (gpu-timed    3.217 ms)
+read  rep 2:    3.346 ms 160.44 GB/s (gpu-timed    3.221 ms)
+read  rep 3:    3.324 ms 161.53 GB/s (gpu-timed    3.213 ms)
+read  rep 4:    3.362 ms 159.71 GB/s (gpu-timed    3.208 ms)
+SUMMARY vk read  src=vram  dst=-      32 MB x16 iters  64: mean 160.84 GB/s  best 161.53 GB/s  gpu-timed 166.93 GB/s  (n=5, mismatches 0)
+copy  rep 0:    9.453 ms  56.80 GB/s copied (gpu-timed    9.110 ms)
+copy  rep 1:    9.384 ms  57.21 GB/s copied (gpu-timed    9.016 ms)
+copy  rep 2:    9.397 ms  57.13 GB/s copied (gpu-timed    9.028 ms)
+copy  rep 3:    9.398 ms  57.12 GB/s copied (gpu-timed    9.031 ms)
+copy  rep 4:    9.458 ms  56.76 GB/s copied (gpu-timed    9.180 ms)
+SUMMARY vk copy  src=vram  dst=vram   32 MB x16 iters  64: mean  57.00 GB/s  best  57.21 GB/s  gpu-timed  59.17 GB/s  (n=5, mismatches 0)
+write rep 0:    5.146 ms 104.32 GB/s (gpu-timed    4.846 ms)
+write rep 1:    5.017 ms 107.00 GB/s (gpu-timed    4.849 ms)
+write rep 2:    4.947 ms 108.53 GB/s (gpu-timed    4.820 ms)
+write rep 3:    5.007 ms 107.23 GB/s (gpu-timed    4.839 ms)
+write rep 4:    5.046 ms 106.40 GB/s (gpu-timed    4.877 ms)
+SUMMARY vk write src=-     dst=vram   32 MB x16 iters  64: mean 106.68 GB/s  best 108.53 GB/s  gpu-timed 110.78 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 76.87 MiB  gtt_used 9.58 MiB
+    fd 4 drm-memory-vram:	66088 KiB
+    fd 4 drm-memory-gtt: 	2988 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	66088 KiB
+RESULT PASS vkbw vram->vram 32 MB
+== vkbw 32 vram vram 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:05+00:00 vkbw 32 gttwc gttwc 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer gttwc   32 MB -> memory type 2 (flags 0x6, heap 0)
+[mem after src alloc] sysfs vram_used 12.55 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	220 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	220 KiB
+  buffer gttwc   32 MB -> memory type 2 (flags 0x6, heap 0)
+[mem after dst alloc] sysfs vram_used 12.62 MiB  gtt_used 72.75 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	67672 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 12.62 MiB  gtt_used 73.25 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	68184 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+submit overhead (1 group): cpu mean 144.3 us best 95.3 us, gpu-timed mean 35.6 us
+read  rep 0:    3.365 ms 159.55 GB/s (gpu-timed    3.221 ms)
+read  rep 1:    3.365 ms 159.54 GB/s (gpu-timed    3.219 ms)
+read  rep 2:    3.382 ms 158.73 GB/s (gpu-timed    3.223 ms)
+read  rep 3:    3.359 ms 159.81 GB/s (gpu-timed    3.221 ms)
+read  rep 4:    3.363 ms 159.64 GB/s (gpu-timed    3.225 ms)
+SUMMARY vk read  src=gttwc dst=-      32 MB x16 iters  64: mean 159.45 GB/s  best 159.81 GB/s  gpu-timed 166.65 GB/s  (n=5, mismatches 0)
+copy  rep 0:    9.572 ms  56.09 GB/s copied (gpu-timed    9.258 ms)
+copy  rep 1:    9.503 ms  56.49 GB/s copied (gpu-timed    9.209 ms)
+copy  rep 2:    9.690 ms  55.40 GB/s copied (gpu-timed    9.385 ms)
+copy  rep 3:    9.730 ms  55.18 GB/s copied (gpu-timed    9.413 ms)
+copy  rep 4:    9.543 ms  56.26 GB/s copied (gpu-timed    9.264 ms)
+SUMMARY vk copy  src=gttwc dst=gttwc  32 MB x16 iters  64: mean  55.88 GB/s  best  56.49 GB/s  gpu-timed  57.69 GB/s  (n=5, mismatches 0)
+write rep 0:    4.984 ms 107.73 GB/s (gpu-timed    4.718 ms)
+write rep 1:    4.869 ms 110.26 GB/s (gpu-timed    4.717 ms)
+write rep 2:    4.839 ms 110.95 GB/s (gpu-timed    4.732 ms)
+write rep 3:    4.882 ms 109.97 GB/s (gpu-timed    4.730 ms)
+write rep 4:    4.830 ms 111.15 GB/s (gpu-timed    4.678 ms)
+SUMMARY vk write src=-     dst=gttwc  32 MB x16 iters  64: mean 110.00 GB/s  best 111.15 GB/s  gpu-timed 113.87 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.87 MiB  gtt_used 73.58 MiB
+    fd 4 drm-memory-vram:	552 KiB
+    fd 4 drm-memory-gtt: 	68524 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	552 KiB
+RESULT PASS vkbw gttwc->gttwc 32 MB
+== vkbw 32 gttwc gttwc 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:10+00:00 vkbw 32 vram gtt 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 44.55 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	32988 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	32988 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after dst alloc] sysfs vram_used 44.62 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	33060 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33060 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 44.62 MiB  gtt_used 41.25 MiB
+    fd 4 drm-memory-vram:	33060 KiB
+    fd 4 drm-memory-gtt: 	35416 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33060 KiB
+submit overhead (1 group): cpu mean 137.0 us best 90.4 us, gpu-timed mean 35.4 us
+read  rep 0:    3.361 ms 159.72 GB/s (gpu-timed    3.242 ms)
+read  rep 1:    3.444 ms 155.90 GB/s (gpu-timed    3.213 ms)
+read  rep 2:    3.450 ms 155.61 GB/s (gpu-timed    3.218 ms)
+read  rep 3:    3.455 ms 155.39 GB/s (gpu-timed    3.222 ms)
+read  rep 4:    3.471 ms 154.65 GB/s (gpu-timed    3.223 ms)
+SUMMARY vk read  src=vram  dst=-      32 MB x16 iters  64: mean 156.24 GB/s  best 159.72 GB/s  gpu-timed 166.54 GB/s  (n=5, mismatches 0)
+copy  rep 0:   72.222 ms   7.43 GB/s copied (gpu-timed   71.713 ms)
+copy  rep 1:   72.342 ms   7.42 GB/s copied (gpu-timed   71.851 ms)
+copy  rep 2:   72.342 ms   7.42 GB/s copied (gpu-timed   71.803 ms)
+copy  rep 3:   72.268 ms   7.43 GB/s copied (gpu-timed   71.726 ms)
+copy  rep 4:   72.333 ms   7.42 GB/s copied (gpu-timed   71.793 ms)
+SUMMARY vk copy  src=vram  dst=gtt    32 MB x16 iters  64: mean   7.43 GB/s  best   7.43 GB/s  gpu-timed   7.48 GB/s  (n=5, mismatches 0)
+write rep 0:   72.856 ms   7.37 GB/s (gpu-timed   72.305 ms)
+write rep 1:   72.800 ms   7.37 GB/s (gpu-timed   72.285 ms)
+write rep 2:   72.868 ms   7.37 GB/s (gpu-timed   72.337 ms)
+write rep 3:   72.700 ms   7.38 GB/s (gpu-timed   72.186 ms)
+write rep 4:   72.800 ms   7.37 GB/s (gpu-timed   72.286 ms)
+SUMMARY vk write src=-     dst=gtt    32 MB x16 iters  64: mean   7.37 GB/s  best   7.38 GB/s  gpu-timed   7.43 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 44.87 MiB  gtt_used 41.58 MiB
+    fd 4 drm-memory-vram:	33320 KiB
+    fd 4 drm-memory-gtt: 	35756 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33320 KiB
+RESULT PASS vkbw vram->gtt 32 MB
+== vkbw 32 vram gtt 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:12+00:00 vkbw 32 gtt vram 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after src alloc] sysfs vram_used 12.55 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	220 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	220 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after dst alloc] sysfs vram_used 44.62 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	33060 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33060 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 44.62 MiB  gtt_used 41.25 MiB
+    fd 4 drm-memory-vram:	33060 KiB
+    fd 4 drm-memory-gtt: 	35416 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33060 KiB
+submit overhead (1 group): cpu mean 152.5 us best 104.6 us, gpu-timed mean 50.7 us
+read  rep 0:   29.530 ms  18.18 GB/s (gpu-timed   29.313 ms)
+read  rep 1:   29.516 ms  18.19 GB/s (gpu-timed   29.171 ms)
+read  rep 2:   29.481 ms  18.21 GB/s (gpu-timed   29.138 ms)
+read  rep 3:   29.555 ms  18.16 GB/s (gpu-timed   29.207 ms)
+read  rep 4:   29.524 ms  18.18 GB/s (gpu-timed   29.177 ms)
+SUMMARY vk read  src=gtt   dst=-      32 MB x16 iters  64: mean  18.19 GB/s  best  18.21 GB/s  gpu-timed  18.39 GB/s  (n=5, mismatches 0)
+copy  rep 0:   30.345 ms  17.69 GB/s copied (gpu-timed   29.964 ms)
+copy  rep 1:   30.295 ms  17.72 GB/s copied (gpu-timed   29.914 ms)
+copy  rep 2:   30.318 ms  17.71 GB/s copied (gpu-timed   29.942 ms)
+copy  rep 3:   30.327 ms  17.70 GB/s copied (gpu-timed   29.948 ms)
+copy  rep 4:   30.340 ms  17.70 GB/s copied (gpu-timed   29.964 ms)
+SUMMARY vk copy  src=gtt   dst=vram   32 MB x16 iters  64: mean  17.70 GB/s  best  17.72 GB/s  gpu-timed  17.93 GB/s  (n=5, mismatches 0)
+write rep 0:    5.138 ms 104.50 GB/s (gpu-timed    4.851 ms)
+write rep 1:    5.135 ms 104.56 GB/s (gpu-timed    4.884 ms)
+write rep 2:    5.128 ms 104.70 GB/s (gpu-timed    4.877 ms)
+write rep 3:    5.100 ms 105.27 GB/s (gpu-timed    4.902 ms)
+write rep 4:    5.166 ms 103.92 GB/s (gpu-timed    4.915 ms)
+SUMMARY vk write src=-     dst=vram   32 MB x16 iters  64: mean 104.59 GB/s  best 105.27 GB/s  gpu-timed 109.88 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 44.87 MiB  gtt_used 41.58 MiB
+    fd 4 drm-memory-vram:	33320 KiB
+    fd 4 drm-memory-gtt: 	35756 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	33320 KiB
+RESULT PASS vkbw gtt->vram 32 MB
+== vkbw 32 gtt vram 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:17+00:00 vkbw 48 vram vram 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    48 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 60.58 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	49404 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	49404 KiB
+  buffer vram    48 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after dst alloc] sysfs vram_used 108.68 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	98660 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98660 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 108.68 MiB  gtt_used 9.50 MiB
+    fd 4 drm-memory-vram:	98660 KiB
+    fd 4 drm-memory-gtt: 	2904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98660 KiB
+submit overhead (1 group): cpu mean 143.4 us best 95.8 us, gpu-timed mean 35.5 us
+read  rep 0:    4.937 ms 163.12 GB/s (gpu-timed    4.800 ms)
+read  rep 1:    4.968 ms 162.08 GB/s (gpu-timed    4.802 ms)
+read  rep 2:    4.978 ms 161.78 GB/s (gpu-timed    4.800 ms)
+read  rep 3:    4.958 ms 162.41 GB/s (gpu-timed    4.797 ms)
+read  rep 4:    4.980 ms 161.71 GB/s (gpu-timed    4.797 ms)
+SUMMARY vk read  src=vram  dst=-      48 MB x16 iters  64: mean 162.22 GB/s  best 163.12 GB/s  gpu-timed 167.80 GB/s  (n=5, mismatches 0)
+copy  rep 0:   13.882 ms  58.01 GB/s copied (gpu-timed   13.569 ms)
+copy  rep 1:   13.911 ms  57.89 GB/s copied (gpu-timed   13.581 ms)
+copy  rep 2:   13.902 ms  57.93 GB/s copied (gpu-timed   13.568 ms)
+copy  rep 3:   13.893 ms  57.96 GB/s copied (gpu-timed   13.558 ms)
+copy  rep 4:   13.855 ms  58.13 GB/s copied (gpu-timed   13.516 ms)
+SUMMARY vk copy  src=vram  dst=vram   48 MB x16 iters  64: mean  57.98 GB/s  best  58.13 GB/s  gpu-timed  59.40 GB/s  (n=5, mismatches 0)
+write rep 0:    7.624 ms 105.63 GB/s (gpu-timed    7.279 ms)
+write rep 1:    7.385 ms 109.05 GB/s (gpu-timed    7.250 ms)
+write rep 2:    7.423 ms 108.49 GB/s (gpu-timed    7.244 ms)
+write rep 3:    7.348 ms 109.60 GB/s (gpu-timed    7.218 ms)
+write rep 4:    7.377 ms 109.16 GB/s (gpu-timed    7.199 ms)
+SUMMARY vk write src=-     dst=vram   48 MB x16 iters  64: mean 108.37 GB/s  best 109.60 GB/s  gpu-timed 111.26 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 108.93 MiB  gtt_used 9.83 MiB
+    fd 4 drm-memory-vram:	98920 KiB
+    fd 4 drm-memory-gtt: 	3244 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98920 KiB
+RESULT PASS vkbw vram->vram 48 MB
+== vkbw 48 vram vram 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:24+00:00 vkbw 96 vram none 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    96 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 108.67 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	98652 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98652 KiB
+  buffer gtt      1 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 108.67 MiB  gtt_used 10.25 MiB
+    fd 4 drm-memory-vram:	98652 KiB
+    fd 4 drm-memory-gtt: 	3672 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98652 KiB
+submit overhead (1 group): cpu mean 132.3 us best 89.8 us, gpu-timed mean 35.5 us
+read  rep 0:    9.775 ms 164.77 GB/s (gpu-timed    9.545 ms)
+read  rep 1:    9.789 ms 164.53 GB/s (gpu-timed    9.531 ms)
+read  rep 2:    9.820 ms 164.01 GB/s (gpu-timed    9.540 ms)
+read  rep 3:    9.758 ms 165.06 GB/s (gpu-timed    9.525 ms)
+read  rep 4:    9.841 ms 163.66 GB/s (gpu-timed    9.584 ms)
+SUMMARY vk read  src=vram  dst=-      96 MB x16 iters  64: mean 164.41 GB/s  best 165.06 GB/s  gpu-timed 168.74 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 108.93 MiB  gtt_used 10.58 MiB
+    fd 4 drm-memory-vram:	98912 KiB
+    fd 4 drm-memory-gtt: 	4012 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	98912 KiB
+RESULT PASS vkbw vram->none 96 MB
+== vkbw 96 vram none 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:27+00:00 vkbw 96 gtt none 64 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer gtt     96 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after src alloc] sysfs vram_used 12.67 MiB  gtt_used 104.75 MiB
+    fd 4 drm-memory-vram:	348 KiB
+    fd 4 drm-memory-gtt: 	100440 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	348 KiB
+  buffer gtt      1 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 12.67 MiB  gtt_used 106.25 MiB
+    fd 4 drm-memory-vram:	348 KiB
+    fd 4 drm-memory-gtt: 	101976 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	348 KiB
+submit overhead (1 group): cpu mean 166.4 us best 111.3 us, gpu-timed mean 50.7 us
+read  rep 0:   87.936 ms  18.32 GB/s (gpu-timed   87.484 ms)
+read  rep 1:   87.813 ms  18.34 GB/s (gpu-timed   87.355 ms)
+read  rep 2:   87.806 ms  18.34 GB/s (gpu-timed   87.310 ms)
+read  rep 3:   87.782 ms  18.35 GB/s (gpu-timed   87.294 ms)
+read  rep 4:   87.959 ms  18.31 GB/s (gpu-timed   87.471 ms)
+SUMMARY vk read  src=gtt   dst=-      96 MB x16 iters  64: mean  18.33 GB/s  best  18.35 GB/s  gpu-timed  18.43 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.93 MiB  gtt_used 106.58 MiB
+    fd 4 drm-memory-vram:	608 KiB
+    fd 4 drm-memory-gtt: 	102316 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	608 KiB
+RESULT PASS vkbw gtt->none 96 MB
+== vkbw 96 gtt none 64 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:28+00:00 vkbw 32 vram vram 256 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after src alloc] sysfs vram_used 44.55 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	32988 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	32988 KiB
+  buffer vram    32 MB -> memory type 3 (flags 0x7, heap 1)
+[mem after dst alloc] sysfs vram_used 76.62 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 76.62 MiB  gtt_used 8.87 MiB
+    fd 4 drm-memory-vram:	65828 KiB
+    fd 4 drm-memory-gtt: 	2264 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	65828 KiB
+submit overhead (1 group): cpu mean 241.8 us best 194.1 us, gpu-timed mean 134.9 us
+read  rep 0:    3.208 ms 167.33 GB/s (gpu-timed    3.039 ms)
+read  rep 1:    3.269 ms 164.23 GB/s (gpu-timed    3.012 ms)
+read  rep 2:    3.300 ms 162.69 GB/s (gpu-timed    3.028 ms)
+read  rep 3:    3.297 ms 162.82 GB/s (gpu-timed    3.027 ms)
+read  rep 4:    3.233 ms 166.04 GB/s (gpu-timed    3.029 ms)
+SUMMARY vk read  src=vram  dst=-      32 MB x16 iters 256: mean 164.60 GB/s  best 167.33 GB/s  gpu-timed 177.36 GB/s  (n=5, mismatches 0)
+copy  rep 0:    9.126 ms  58.83 GB/s copied (gpu-timed    8.802 ms)
+copy  rep 1:    9.099 ms  59.00 GB/s copied (gpu-timed    8.735 ms)
+copy  rep 2:    9.112 ms  58.92 GB/s copied (gpu-timed    8.781 ms)
+copy  rep 3:    9.147 ms  58.70 GB/s copied (gpu-timed    8.773 ms)
+copy  rep 4:    9.017 ms  59.54 GB/s copied (gpu-timed    8.620 ms)
+SUMMARY vk copy  src=vram  dst=vram   32 MB x16 iters 256: mean  58.99 GB/s  best  59.54 GB/s  gpu-timed  61.41 GB/s  (n=5, mismatches 0)
+write rep 0:    5.230 ms 102.65 GB/s (gpu-timed    4.916 ms)
+write rep 1:    5.178 ms 103.68 GB/s (gpu-timed    4.899 ms)
+write rep 2:    5.191 ms 103.43 GB/s (gpu-timed    4.888 ms)
+write rep 3:    5.109 ms 105.09 GB/s (gpu-timed    4.891 ms)
+write rep 4:    5.182 ms 103.60 GB/s (gpu-timed    4.897 ms)
+SUMMARY vk write src=-     dst=vram   32 MB x16 iters 256: mean 103.68 GB/s  best 105.09 GB/s  gpu-timed 109.60 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 76.87 MiB  gtt_used 9.20 MiB
+    fd 4 drm-memory-vram:	66088 KiB
+    fd 4 drm-memory-gtt: 	2604 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	66088 KiB
+RESULT PASS vkbw vram->vram 32 MB
+== vkbw 32 vram vram 256 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0
+== 2026-11-25T22:14:33+00:00 vkbw 32 gtt gtt 256 5 16
+device AMD GL-B2 (RADV KAVERI), timestampPeriod 10.000 ns
+  heap 0: 1341 MiB flags 0
+  heap 1: 2682 MiB flags 0x1
+  type 0: heap 1 flags 0x1 DEVICE_LOCAL
+  type 1: heap 1 flags 0x1 DEVICE_LOCAL
+  type 2: heap 0 flags 0x6 HOST_VISIBLE HOST_COHERENT
+  type 3: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 4: heap 1 flags 0x7 DEVICE_LOCAL HOST_VISIBLE HOST_COHERENT
+  type 5: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+  type 6: heap 0 flags 0xe HOST_VISIBLE HOST_COHERENT HOST_CACHED
+queue family 0 flags 0xf timestampValidBits 64
+[mem after device create] sysfs vram_used 12.48 MiB  gtt_used 8.75 MiB
+    fd 4 drm-memory-vram:	156 KiB
+    fd 4 drm-memory-gtt: 	2136 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	156 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after src alloc] sysfs vram_used 12.55 MiB  gtt_used 40.75 MiB
+    fd 4 drm-memory-vram:	220 KiB
+    fd 4 drm-memory-gtt: 	34904 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	220 KiB
+  buffer gtt     32 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after dst alloc] sysfs vram_used 12.62 MiB  gtt_used 72.75 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	67672 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+  buffer gtt      0 MB -> memory type 5 (flags 0xe, heap 0)
+[mem after CPU fill] sysfs vram_used 12.62 MiB  gtt_used 72.87 MiB
+    fd 4 drm-memory-vram:	292 KiB
+    fd 4 drm-memory-gtt: 	67800 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	292 KiB
+submit overhead (1 group): cpu mean 304.7 us best 257.9 us, gpu-timed mean 195.8 us
+read  rep 0:   29.208 ms  18.38 GB/s (gpu-timed   28.925 ms)
+read  rep 1:   29.144 ms  18.42 GB/s (gpu-timed   28.794 ms)
+read  rep 2:   29.167 ms  18.41 GB/s (gpu-timed   28.814 ms)
+read  rep 3:   29.256 ms  18.35 GB/s (gpu-timed   28.851 ms)
+read  rep 4:   29.158 ms  18.41 GB/s (gpu-timed   28.808 ms)
+SUMMARY vk read  src=gtt   dst=-      32 MB x16 iters 256: mean  18.39 GB/s  best  18.42 GB/s  gpu-timed  18.62 GB/s  (n=5, mismatches 0)
+copy  rep 0:   57.219 ms   9.38 GB/s copied (gpu-timed   56.691 ms)
+copy  rep 1:   57.489 ms   9.34 GB/s copied (gpu-timed   56.957 ms)
+copy  rep 2:   57.590 ms   9.32 GB/s copied (gpu-timed   57.060 ms)
+copy  rep 3:   57.394 ms   9.35 GB/s copied (gpu-timed   56.870 ms)
+copy  rep 4:   57.379 ms   9.36 GB/s copied (gpu-timed   56.852 ms)
+SUMMARY vk copy  src=gtt   dst=gtt    32 MB x16 iters 256: mean   9.35 GB/s  best   9.38 GB/s  gpu-timed   9.44 GB/s  (n=5, mismatches 0)
+write rep 0:   74.553 ms   7.20 GB/s (gpu-timed   73.957 ms)
+write rep 1:   74.393 ms   7.22 GB/s (gpu-timed   73.871 ms)
+write rep 2:   74.403 ms   7.22 GB/s (gpu-timed   73.884 ms)
+write rep 3:   74.579 ms   7.20 GB/s (gpu-timed   73.995 ms)
+write rep 4:   74.539 ms   7.20 GB/s (gpu-timed   74.024 ms)
+SUMMARY vk write src=-     dst=gtt    32 MB x16 iters 256: mean   7.21 GB/s  best   7.22 GB/s  gpu-timed   7.26 GB/s  (n=5, mismatches 0)
+source intact after runs: yes
+[mem after GPU runs] sysfs vram_used 12.87 MiB  gtt_used 73.20 MiB
+    fd 4 drm-memory-vram:	552 KiB
+    fd 4 drm-memory-gtt: 	68140 KiB
+    fd 4 amd-evicted-vram:	0 KiB
+    fd 4 amd-requested-vram:	552 KiB
+RESULT PASS vkbw gtt->gtt 32 MB
+== vkbw 32 gtt gtt 256 5 16 rc=0 (124=timeout, 2=hang) trouble-count before=0 after=0

@@ -1,7 +1,7 @@
 ROCM    ?= $(HOME)/rocm-gfx7
 CC      ?= gcc
 CFLAGS  ?= -O2 -g -Wall -Wextra -std=gnu11 -ffp-contract=off
-CPPFLAGS = -I. -I$(ROCM)/include
+CPPFLAGS = -I. -I$(ROCM)/include -I/usr/include/libdrm
 LDLIBS   = libpm4bridge.a $(ROCM)/lib/libhsakmt.a -ldrm_amdgpu -ldrm -lnuma -lpthread -lrt -lm
 
 # Device code: gfx701 (hawaii), no FLAT addressing, no 128-bit LDS ops.
@@ -10,7 +10,7 @@ CLC      = clang -x cl -cl-std=CL1.2 -target amdgcn-amd-amdhsa -mcpu=hawaii -nog
            -Xclang -target-feature -Xclang -flat-for-global \
            -Xclang -target-feature -Xclang -enable-ds128
 
-TESTS   = t_noop t_errors t_fill t_vadd t_copybw t_matvec t_stress t_wide
+TESTS   = t_noop t_errors t_fill t_vadd t_copybw t_matvec t_stress t_wide t_vrambw
 KERNELS = noop fill vadd copybw matvec stress wide
 BINS    = $(addprefix tests/,$(TESTS))
 COS     = $(patsubst %,kernels/%.co,$(KERNELS))
@@ -52,7 +52,14 @@ check: all
 	./run.sh t_wide 120 256 64
 	@echo; echo "== summary"; grep -h "^RESULT" logs/*.log
 
+# Vulkan version of the bandwidth test (needs glslc, libvulkan, patched Mesa to run)
+vk: vk/vkbw vk/bw_copy.spv vk/bw_sum.spv vk/bw_fill.spv
+vk/vkbw: vk/vkbw.c
+	$(CC) -O2 -Wall -o $@ $< -lvulkan
+vk/%.spv: vk/%.comp
+	glslc -O $< -o $@
+
 clean:
 	rm -f pm4bridge.o libpm4bridge.a $(BINS) kernels/*.co kernels/*.s kernels/bad/*.co
 
-.PHONY: all clean check
+.PHONY: all clean check vk

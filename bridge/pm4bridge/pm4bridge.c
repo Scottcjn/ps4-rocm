@@ -394,6 +394,60 @@ int pm4_free(pm4_ctx *ctx, pm4_buf *buf)
 	return rc;
 }
 
+int pm4_import_dmabuf(pm4_ctx *ctx, int fd, size_t bytes, pm4_buf *out)
+{
+	HsaGraphicsResourceInfo info;
+	HsaMemMapFlags mapf;
+	HSAuint32 node;
+
+	if (!ctx || !out || fd < 0 || !bytes)
+		return PM4_ERR_ARG;
+	memset(out, 0, sizeof(*out));
+	memset(&info, 0, sizeof(info));
+	node = ctx->node;
+	if (hsaKmtRegisterGraphicsHandleToNodes((HSAuint64)fd, &info, 1, &node) != HSAKMT_STATUS_SUCCESS ||
+	    !info.MemoryAddress) {
+		ERR("hsaKmtRegisterGraphicsHandleToNodes(fd %d) failed\n", fd);
+		return PM4_ERR_KFD;
+	}
+	if (info.SizeInBytes < bytes) {
+		ERR("dmabuf is %llu bytes, %zu wanted\n", (unsigned long long)info.SizeInBytes, bytes);
+		hsaKmtDeregisterMemory(info.MemoryAddress);
+		return PM4_ERR_ARG;
+	}
+	memset(&mapf, 0, sizeof(mapf));
+	node = ctx->node;
+	if (hsaKmtMapMemoryToGPUNodes(info.MemoryAddress, info.SizeInBytes, NULL, mapf, 1, &node) !=
+	    HSAKMT_STATUS_SUCCESS) {
+		ERR("hsaKmtMapMemoryToGPUNodes(import, %llu bytes) failed\n",
+		    (unsigned long long)info.SizeInBytes);
+		hsaKmtDeregisterMemory(info.MemoryAddress);
+		return PM4_ERR_KFD;
+	}
+	out->cpu = NULL;
+	out->gpu = (uint64_t)(uintptr_t)info.MemoryAddress;
+	out->size = (size_t)info.SizeInBytes;
+	return PM4_OK;
+}
+
+int pm4_release_import(pm4_ctx *ctx, pm4_buf *buf)
+{
+	int rc = PM4_OK;
+	void *addr;
+
+	if (!ctx || !buf)
+		return PM4_ERR_ARG;
+	if (!buf->gpu)
+		return PM4_OK;
+	addr = (void *)(uintptr_t)buf->gpu;
+	if (hsaKmtUnmapMemoryToGPU(addr) != HSAKMT_STATUS_SUCCESS)
+		rc = PM4_ERR_KFD;
+	if (hsaKmtDeregisterMemory(addr) != HSAKMT_STATUS_SUCCESS)
+		rc = PM4_ERR_KFD;
+	memset(buf, 0, sizeof(*buf));
+	return rc;
+}
+
 /* ---- init / shutdown --------------------------------------------------- */
 int pm4_init(pm4_ctx **pctx)
 {
