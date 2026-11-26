@@ -255,11 +255,59 @@ the same memory, and the rest spills to the HDD swap.
 | Qwen3-14B Q4_K_M | 8.38 GiB | 0 | 1.1 | 0.01 (tg8; HDD-bound) |
 
 Takeaways:
-- **~8B at Q3 is the single-console ceiling** (~9 tok/s, fully on the GPU).
+- **~8B at Q3 is the single-console ceiling** (~9 tok/s, fully on the GPU) *for standard quants*. Ternary
+  quants move it: a 9B at 2.25 GiB runs fully on the GPU at 14.2 tok/s (§2f).
 - 8B Q4_K_M fully offloaded fails at command submission, not at load: the GPU-visible budget (~2.6 GiB device-local +
   host heap) runs out once the KV cache and compute buffers are added. Partial offload (30/36) works.
 - 14B doesn't fit in RAM at all; it pages from the HDD. **Bigger models need more consoles** → llama.cpp RPC split
   across PS4s (next).
+
+## 2f. Round 2: current small models (2026-11-25/26)
+
+PrismML's llama.cpp fork (`f702476`, branch `prism`) ships Vulkan shaders for its ternary formats. They run on gfx7 with
+the patched Mesa, so ternary models stay on the GPU instead of falling back to the CPU. Same env as §2e, `-r 2`.
+Full rows: [ps4-ai-benchmarks](https://github.com/Scottcjn/ps4-ai-benchmarks) `results/llm.csv`.
+
+| Model | Size | pp128 | tg32 | note |
+|---|---|---|---|---|
+| Ternary-Bonsai-2-2B PQ2_0 | 0.48 GiB | 368 | **43.0** | 16k ctx in 988 MiB GTT |
+| Gemma-4-E2B-it IQ4_XS | 2.78 GiB | 255 | **27.0** | best overall; 3/3 smoke prompts |
+| Qwen3.5-4B Q4_0 | 2.41 GiB | 157 | 23.7 | |
+| Qwen3-4B Q4_K_M (round-1 model, this build) | 2.32 GiB | 137 | 20.1 | build ~3% slower than 244640b |
+| **Ternary-Bonsai-2-9B PQ2_0** | 2.25 GiB | 86 | **14.2** | **a 9B fully on the GPU**; 1.5× the best 8B Q3 |
+| Gemma-4-E4B-it Q3_K_S | 3.60 GiB | 114 | 11.1 | needs `-lm mmap` |
+| Qwen3.5-9B Q3_K_S (ngl 28) | 4.02 GiB | 40 | 5.8 | over the GTT cap |
+
+- **The fork loads without mmap by default.** Near the ~3.9 GiB cap that fails with `Not enough memory for command submission` → DeviceLost. Use `-lm mmap`.
+- There were 12 such DeviceLost events in the run. All were in user space, with 0 kernel GPU hangs.
+- **Bits per weight is the lever on this console, not compute.** At 2.25 GiB the 9B ternary model is smaller than a 4B at Q4.
+
+## 2g. Regression check, 2026-11-26: the KFD queue hangs under memory pressure
+
+The pm4bridge `make check` ran on the same kernel and boot as §2d's all-pass run (2026-11-25 22:00).
+- `noop`, `errors` and both `fill` runs passed.
+- **`t_vadd` hung.** It needs 3 × 64 MiB GTT buffers. Its fence never retired: `rptr 0, wptr 11`, so the CP never read the queue.
+- Teardown then logged `cp queue preemption time out` → `Failed to evict process queues` → `Failed to quiesce KFD` (3 preemption timeouts).
+- No process was left in D state, and the miner kept running.
+
+State at the time:
+- Only 343 MiB of RAM was free; 7.2 GiB was page cache, mostly model files from §2f.
+- §2f's runs had also left 12 DeviceLost events in user space.
+
+**One variable changed:** the model files' page cache was dropped as the normal user (`posix_fadvise(DONTNEED)`, no root), leaving 3.8 GiB free.
+- `t_vadd` then **PASSED**: bit-exact, 18.6 GB/s.
+- The rest of the suite then passed with numbers matching §2d: stress 7.6 µs/dispatch, read 18.2 GB/s, write 7.3 GB/s, matvec 9.1 GFLOP/s, wide 18.2 GB/s.
+- The trouble count stayed at 5 throughout.
+
+**Working hypothesis (n = 1 fail, 1 pass; not yet reproduced on purpose):**
+1. A KFD allocation that forces page-cache reclaim triggers a KFD eviction of the process's queues.
+2. On gfx7 no-HWS, the restore never re-maps the queue, so the next dispatch is never fetched.
+
+To confirm: refill the page cache (`cat` the model files), then run `t_vadd` once.
+- If it hangs again, trace `kfd_process_evict_queues` / `restore_process_worker`.
+- That run risks another hang. The 2026-11-25 notes record a D-state process after 3 hangs, which needed a reboot, and reboots go through GoldHEN.
+
+**Until fixed:** run KFD/pm4bridge work with RAM free. Drop model page cache first. Don't run it right after big llama.cpp sessions.
 
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
@@ -275,9 +323,13 @@ requires typing `YES`, so reboots don't wipe the install.
 
 ## Next
 
-1. ~~Boot the KFD kernel~~ ✅ booted; `/dev/kfd` and the topology are good. Next: kfdtest (queue create/destroy, EmptyDispatch).
-2. Mesa ACO patch: gfx7 global memory → MUBUF addr64; no `ds_*_b128` → rerun vkbisect + llama-bench.
-3. ROCr/ROCT + LLVM gfx701 with `-flat-for-global` off → hello-world HIP/OpenCL kernel.
+1. ~~Boot the KFD kernel~~ ✅ booted. ~~kfdtest~~ ✅ (§2c).
+2. ~~Mesa ACO patch~~ ✅ (§2b): vkbisect 12/12 OK, llama.cpp runs.
+3. ROCr user space: ✅ `hsa_init` sees gfx701. ❌ Stock ROCr can't dispatch, because the MEC firmware has no AQL (§2c).
+   ✅ pm4bridge dispatches clang kernels on PM4 queues instead (§2d), re-verified 2026-11-26 (§2g).
+   Open: a HIP-like front end over pm4bridge.
+3b. **Fix the KFD queue hang under memory pressure (§2g)**: reproduce once, then trace evict/restore on no-HWS gfx7.
+3c. Explain the pp128 drop on the KFD kernel (1164 → 790, §2); tg is unchanged.
 4. Benchmarks: Linux Vulkan vs Garlic on the same Pro, same model.
 5. Expose the Pro's packed FP16 to RADV/LLVM.
 6. Two-PS4 split: `rpc-server` on a second console, head node on the Pro → run a 14B across both (§2e).
