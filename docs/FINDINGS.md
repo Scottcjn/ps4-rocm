@@ -320,6 +320,42 @@ Tally: 2 failures at < 500 MiB free, 1 pass at 3.8 GiB free.
 
 **Until fixed:** run KFD/pm4bridge work with RAM free. Drop model page cache first. Don't run it right after big llama.cpp sessions.
 
+## 2h. Split across two machines: PS4 Pro + Victus over llama.cpp RPC (2026-11-26)
+
+There is no second Linux PS4 (the base console is on fw 13.52), so the HP Victus stood in as the second node.
+- Setup:
+  - Head node: the Pro, Vulkan, patched Mesa, `GGML_VK_PREFER_HOST_MEMORY=1`.
+  - Second node: `ggml-rpc-server` on the Victus, CPU only, 8 threads, bound to the cable address 10.42.0.1 only (RPC has no auth).
+  - Link: the direct cable through Victus ICS, 0.2 ms RTT.
+- Both sides at llama.cpp `244640b`. On this commit the target is `ggml-rpc-server`, not `rpc-server`.
+  - Pro: new dir `build-vk-rpc` (`-DGGML_RPC=ON`); `build-vk` untouched.
+  - Victus: fresh clone in `rpc/llama.cpp-244640b` (gitignored), `build-rpc-cpu`.
+- Victus gotcha: `~/.local/bin/cc` is a tmux launcher that shadows the C compiler. Configure with `CC=/usr/bin/gcc CXX=/usr/bin/g++`.
+
+| Model | Where | ts (Pro/Victus) | pp128 tok/s | tg32 tok/s |
+|---|---|---|---|---|
+| Qwen3-0.6B Q8_0 | Pro + Victus | 50/50 | 548 | 58.1 |
+| Phi-4 14B Q3_K_S (6.05 GiB) | Pro alone, 18 layers on GPU (§2e) | – | 19 | 2.1 |
+| Phi-4 14B Q3_K_S | **Pro + Victus** | 45/55 | **42.9** | **5.97** |
+| Phi-4 14B Q3_K_S | Victus CPU alone, 8 threads (control) | – | 64.9 | 8.43 |
+| Qwen3-14B Q4_K_M (8.38 GiB) | Pro + Victus | 40/60, 30/70, 15/85, and 30/70 with `-lm none` | ❌ DeviceLost at load | – |
+
+- Every run: no OOM-killer event, and no new kernel ring timeout (trouble count stayed at 5).
+
+**Findings**
+- **The split works.** A 14B the Pro can't run usefully alone ran at 2.8× the Pro-only generation speed (5.97 vs 2.1 tok/s).
+- **The Victus alone is faster than the split** (8.43 vs 5.97 tok/s).
+  - Layers run in sequence, so each token waits for the Pro's share.
+  - The Victus CPU is much faster than a second PS4 would be. Read these numbers as the most a split can do on this link, not what two consoles would get.
+- **Qwen3-14B Q4_K_M fails whatever the GPU share.** At 15/85 only about 1.3 GiB of layers were on the Pro, and it still hit `vk::Queue::submit: ErrorDeviceLost` while loading.
+  - Peak RAM use was 6.4 to 7.4 GiB of 7.8; GTT peaked at 3.1 to 3.7 GiB.
+  - Phi-4's file is 6.05 GiB and loads; Qwen's is 8.38 GiB and doesn't. The head node reads the whole file to stream the RPC layers out.
+  - Suspected cause: memory pressure on the Pro's shared RAM during that read, not the GPU share itself. **Not yet proven.**
+- After each DeviceLost, a 0.6B Vulkan run on the Pro passed (811 pp / 73 tg), so the GPU recovers without a reboot.
+- Afterwards, the model page cache was dropped as the normal user (`posix_fadvise(DONTNEED)`), per §2g: 1.5 → 4.9 GiB free.
+
+**Next:** try a 14B at about 6 GiB (Q3_K_S, with licence receipt), or start `ggml-rpc-server -c` on the Victus with the GGUF already cached there, so the Pro sends hashes instead of weights.
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
@@ -344,3 +380,5 @@ requires typing `YES`, so reboots don't wipe the install.
 4. Benchmarks: Linux Vulkan vs Garlic on the same Pro, same model.
 5. Expose the Pro's packed FP16 to RADV/LLVM.
 6. Two-PS4 split: `rpc-server` on a second console, head node on the Pro → run a 14B across both (§2e).
+   ✅ Stand-in done with the Victus as the second node (§2h): Phi-4 14B at 5.97 tok/s. ❌ Qwen3-14B Q4_K_M DeviceLost at load.
+   Waiting on a second console that can run Linux.

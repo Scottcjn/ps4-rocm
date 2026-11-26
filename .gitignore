@@ -5,3 +5,4 @@ head/nodes.ini
 __pycache__/
 NOTES.private.md
 *.private.*
+rpc/llama.cpp-*/
