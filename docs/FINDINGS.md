@@ -299,13 +299,24 @@ State at the time:
 - The rest of the suite then passed with numbers matching §2d: stress 7.6 µs/dispatch, read 18.2 GB/s, write 7.3 GB/s, matvec 9.1 GFLOP/s, wide 18.2 GB/s.
 - The trouble count stayed at 5 throughout.
 
-**Working hypothesis (n = 1 fail, 1 pass; not yet reproduced on purpose):**
-1. A KFD allocation that forces page-cache reclaim triggers a KFD eviction of the process's queues.
-2. On gfx7 no-HWS, the restore never re-maps the queue, so the next dispatch is never fetched.
+**Reproduced on purpose (2026-11-26 15:13), with evidence of an eviction.**
+- Setup: page cache refilled with the model files (457 MiB free), then `t_vadd` run once.
+- KFD's own sysfs counter `/sys/class/kfd/kfd/proc/<pid>/stats_<gpuid>/evicted_ms` went **0 → 64** about 3 s in. The process's queues were evicted, then restored after 64 ms.
+- Rep 0 completed: bit-exact, 18.3 GB/s.
+- Rep 1 was never fetched: `fence 2 not reached … rptr 11, wptr 22`. **After evict + restore the queue is dead.**
+- Teardown again logged `preemption time out` / `Failed to quiesce KFD`.
+- No D state; the miner was unaffected.
 
-To confirm: refill the page cache (`cat` the model files), then run `t_vadd` once.
-- If it hangs again, trace `kfd_process_evict_queues` / `restore_process_worker`.
-- That run risks another hang. The 2026-11-25 notes record a D-state process after 3 hangs, which needed a reboot, and reboots go through GoldHEN.
+Tally: 2 failures at < 500 MiB free, 1 pass at 3.8 GiB free.
+
+**Code suspect (not yet proven).** No-HWS evict/restore in `kfd_device_queue_manager.c`:
+- `evict_process_queues_nocpsch` → `destroy_mqd` → gfx7 `kgd_hqd_destroy` (`amdgpu_amdkfd_gfx_v7.c`). This dequeues (DRAIN_PIPE) but **does not copy HQD state back into the MQD**.
+- `restore_process_queues_nocpsch` → `kgd_hqd_load` rewrites every register from `CP_MQD_BASE_ADDR` to `CP_MQD_CONTROL` from the MQD. That includes `CP_HQD_PQ_RPTR` and its other ring state.
+- Unless the Gladius MEC firmware writes the HQD back to the MQD on dequeue, the restored queue starts from **stale state**.
+- Next proof step needs root:
+  1. Dump `/sys/kernel/debug/kfd/hqds` before and after the eviction during one hung `t_vadd`.
+  2. Compare `CP_HQD_PQ_RPTR` / `WPTR` / `ACTIVE` / `DOORBELL_CONTROL` with the MQD.
+- Candidate fix (`0006`): in gfx7 `kgd_hqd_destroy`, after the dequeue completes, read the HQD registers back into the MQD (as `kgd_hqd_dump` reads them). Then restore resumes from live state.
 
 **Until fixed:** run KFD/pm4bridge work with RAM free. Drop model page cache first. Don't run it right after big llama.cpp sessions.
 
