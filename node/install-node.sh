@@ -11,7 +11,7 @@
 #   0. detect.sh — which PS4 (Pro/base), distro, privileges, RAM -> build jobs, kernel features
 #   1. package-manager prep (Arch: init pacman keyring — fresh PS4 images ship without one)
 #   2. packages (pacman or apt list chosen by detection)
-#   3. sshd: enabled + Restart=always override (on thebe sshd stopped cleanly during the
+#   3. sshd: enabled + Restart=always override (no OOMScoreAdjust: ssh children inherit it) (on thebe sshd stopped cleanly during the
 #      openssh upgrade and stayed down — no OOM involved)
 #   4. vkprobe — headless Vulkan probe (vulkaninfo crashes when amdgpu.dc=0)
 #   5. llama.cpp with the Vulkan backend
@@ -67,7 +67,9 @@ esac
 log "3/6 sshd at boot + self-healing"
 SSHD_UNIT=sshd; systemctl list-unit-files sshd.service >/dev/null 2>&1 || SSHD_UNIT=ssh   # Debian calls it ssh
 sudo_ mkdir -p "/etc/systemd/system/$SSHD_UNIT.service.d"
-printf '[Service]\nRestart=always\nRestartSec=3\nOOMScoreAdjust=-900\n' | \
+# NO OOMScoreAdjust here: every process started over ssh inherits it, so on 2026-11-25 an
+# OOM killed journald/networkd/the miner (16 procs) and spared the runaway ssh-launched benchmark.
+printf '[Service]\nRestart=always\nRestartSec=3\n' | \
   write_root "/etc/systemd/system/$SSHD_UNIT.service.d/override.conf" 644
 sudo_ systemctl daemon-reload
 sudo_ systemctl enable --now "$SSHD_UNIT"
