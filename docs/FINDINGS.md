@@ -237,6 +237,30 @@ Other findings:
 - `buffer_*_dwordx4` (global) is fine; the b128 bug is LDS-only.
 - GPU timestamps tick at ~100 MHz.
 
+## 2e. How big a model fits on one PS4 Pro (2026-11-25)
+
+Same setup as above: patched Mesa ICD + `GGML_VK_PREFER_HOST_MEMORY=1`, llama.cpp 244640b, `llama-bench -r 1`
+(single runs; treat ±10% as noise). Each run was followed by a GPU health check (`vkbisect`) and a hang/oops count;
+none changed. The 8 GB is shared by CPU, GPU and the OS, so "GPU layers" doesn't free RAM — every layer lives in
+the same memory, and the rest spills to the HDD swap.
+
+| Model | Size | GPU layers | pp128 tok/s | tg32 tok/s |
+|---|---|---|---|---|
+| Qwen3-4B Q4_K_M | 2.32 GiB | all | 142 | 20.5 |
+| Qwen3-8B Q3_K_S | 3.51 GiB | all | 70 | **9.3** |
+| Granite 3.3 8B Q3_K_S | 3.34 GiB | all | 61 | 8.3 |
+| Qwen3-8B Q4_K_M | 4.68 GiB | 30 of 36 | 22 | 7.7 |
+| Qwen3-8B Q4_K_M | 4.68 GiB | all | — | `Not enough memory for command submission` → DeviceLost |
+| Phi-4 14B Q3_K_S | 6.05 GiB | 18 | 19 | 2.1 |
+| Qwen3-14B Q4_K_M | 8.38 GiB | 0 | 1.1 | 0.01 (tg8; HDD-bound) |
+
+Takeaways:
+- **~8B at Q3 is the single-console ceiling** (~9 tok/s, fully on the GPU).
+- 8B Q4_K_M fully offloaded fails at command submission, not at load: the GPU-visible budget (~2.6 GiB device-local +
+  host heap) runs out once the KV cache and compute buffers are added. Partial offload (30/36) works.
+- 14B doesn't fit in RAM at all; it pages from the HDD. **Bigger models need more consoles** → llama.cpp RPC split
+  across PS4s (next).
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
@@ -256,3 +280,4 @@ requires typing `YES`, so reboots don't wipe the install.
 3. ROCr/ROCT + LLVM gfx701 with `-flat-for-global` off → hello-world HIP/OpenCL kernel.
 4. Benchmarks: Linux Vulkan vs Garlic on the same Pro, same model.
 5. Expose the Pro's packed FP16 to RADV/LLVM.
+6. Two-PS4 split: `rpc-server` on a second console, head node on the Pro → run a 14B across both (§2e).
