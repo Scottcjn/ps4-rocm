@@ -1,0 +1,29 @@
+
+    // Tuning overrides for the dequant mul_mat_vec row counts (rows per workgroup).
+    // More rows = more independent weight loads in flight per thread, which helps
+    // GPUs where the matvec is load-latency bound rather than ALU bound.
+    // NUM_ROWS also sizes shared memory (tmpsh[NUM_COLS][NUM_ROWS][BLOCK_SIZE]), so
+    // values are clamped to keep the shader within the 32 KiB shared-memory minimum.
+    {
+        auto rm_override = [](const char * name, uint32_t & value, uint32_t max_value) {
+            const char * s = getenv(name);
+            if (s == nullptr || *s == '\0') {
+                return;
+            }
+            char * end = nullptr;
+            const unsigned long v = strtoul(s, &end, 10);
+            if (end == s || *end != '\0' || v < 1 || v > max_value) {
+                GGML_LOG_WARN("ggml_vulkan: ignoring %s=%s (expected 1..%u)\n", name, s, max_value);
+                return;
+            }
+            value = (uint32_t) v;
+            GGML_LOG_INFO("ggml_vulkan: %s=%u\n", name, value);
+        };
+        // Q4_0/Q4_1/Q5_x use 2*rm_stdq rows, Q8_0 uses 1*rm_stdq.
+        rm_override("GGML_VK_RM_STDQ", rm_stdq, 8);
+        rm_override("GGML_VK_RM_KQ",   rm_kq,   16);
+        // rm_iq defaults to 2*rm_kq (after any RM_KQ override) unless set explicitly.
+        rm_iq = std::min(2 * rm_kq, 16u);
+        rm_override("GGML_VK_RM_IQ",   rm_iq,   16);
+    }
+
