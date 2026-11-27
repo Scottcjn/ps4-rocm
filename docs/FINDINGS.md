@@ -381,4 +381,5 @@ requires typing `YES`, so reboots don't wipe the install.
 5. Expose the Pro's packed FP16 to RADV/LLVM.
 6. Two-PS4 split: `rpc-server` on a second console, head node on the Pro → run a 14B across both (§2e).
    ✅ Stand-in done with the Victus as the second node (§2h): Phi-4 14B at 5.97 tok/s. ❌ Qwen3-14B Q4_K_M DeviceLost at load.
-   Waiting on a second console that can run Linux.
+   **Shelved 2026-11-27 (Scott): not worth it.** A split adds memory, not speed. Ten Pros could hold a 70B Q4, but at
+   an estimated ~0.8 tok/s. Focus moves to making micro models (≤ ~4 GiB, fully on one console's GPU) faster.
