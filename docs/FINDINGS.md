@@ -356,6 +356,54 @@ There is no second Linux PS4 (the base console is on fw 13.52), so the HP Victus
 
 **Next:** try a 14B at about 6 GiB (Q3_K_S, with licence receipt), or start `ggml-rpc-server -c` on the Victus with the GGUF already cached there, so the Pro sends hashes instead of weights.
 
+## 2i. Where micro-model token time goes (2026-11-27, kernel #4)
+
+**Method.**
+- For each model, two `llama-bench` runs: a plain tg64 run, then the same with `GGML_VK_PERF_LOGGER=1` for per-op GPU time.
+- Scripts and raw logs: `prof/prof.sh`, `prof/parse.py`, `prof/run1/`.
+- Qwen models on `244640b`; Bonsai and Gemma on the PrismML fork `f702476`.
+- Env: prefer-host on, patched Mesa. No kernel ring timeouts.
+
+| Model | tg tok/s | GPU busy | GPU ops/token | Biggest cost |
+|---|---|---|---|---|
+| Qwen3-0.6B Q8_0 | 73.1 | 99% | ~400 | FLASH_ATTN_EXT **43%** (210 µs/call at ~256 ctx) |
+| Ternary-Bonsai-2-2B PQ2_0 | 43.5 | 99% | ~680 | pq2_0 matvec, ~34 GB/s |
+| gemma-4-E2B IQ4_XS | 27.0 | 99% | ~640 | iq4_xs matvec 58–66 GB/s; FA 27% |
+| Qwen3-4B Q4_K_M | 20.4 | ~100% | ~510 | q4_K matvec 50–54 GB/s |
+
+**Findings**
+- **CPU and dispatch overhead is ~0.** The GPU is busy for the whole token, so the cost is shader time.
+- **Matvec read speed depends on the quant type** (bytes read ÷ op time):
+
+  | Quant | Matvec read speed |
+  |---|---|
+  | q8_0 | **100–121 GB/s** |
+  | q6_K | 83–91 GB/s |
+  | iq4_xs | 58–66 GB/s |
+  | q4_K | 49–54 GB/s |
+  | pq2_0 (ternary) | ~34 GB/s |
+
+  - gfx7 has no packed integer dot product, so 4-bit and 2-bit dequant is ALU-bound.
+  - Q8_0 at 121 GB/s also confirms that prefer-host puts weights in write-combined memory, not the 18 GB/s cached type.
+- **The prefer-host flag matters a lot** (6b28850e session, kernel #4): Qwen3-0.6B tg 23.0 off vs 73.3 on; Qwen3-4B 60.8/6.65 off vs 142.0/20.5 on.
+  - It is checked with `getenv() != nullptr`, so setting it empty still turns it on. Use `env -u` for an "off" run.
+
+**Flash attention off (`-fa 0`) is faster on every micro model** (tg64 tok/s, `-r 3`, 0 hangs):
+
+| Model | fa 1, depth 0 | **fa 0, depth 0** | fa 1, depth 1024 | **fa 0, depth 1024** |
+|---|---|---|---|---|
+| Qwen3-0.6B Q8_0 | 73.0 | **110.1 (+51%)** | 66.0 | **79.4 (+20%)** |
+| Qwen3-4B Q4_K_M | 20.6 | **22.5 (+10%)** | 19.5 | **20.4 (+5%)** |
+| Ternary-Bonsai-2-2B | 43.5 | **44.6** | 42.1 | **44.4** |
+| gemma-4-E2B IQ4_XS | 27.1 | **34.8 (+29%)** | 20.5 | **32.1 (+57%)** |
+
+- **Use `-fa off` for decoding on the PS4.** Only tg was measured here; the FA effect on prompt reading (pp) is not yet measured.
+
+**Next levers, in order of expected gain**
+1. Quant choice: Q4_0 or Q8_0 over K-quants and IQ formats where the model still fits.
+2. A gfx7-tuned dequant for q4_K, iq4_xs and pq2_0 matvec.
+3. Speculative decoding with a tiny draft model.
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
