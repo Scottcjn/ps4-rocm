@@ -1,0 +1,140 @@
+#version 450
+
+// Q4_K matrix-vector product, "wide load" variant (Elyan Labs PS4 Pro experiment).
+//
+// Stock shader: 16 threads per 144-byte superblock, each thread issues ~6 small loads
+// (dm, three 16-bit scale words, two 32-bit qs words) for 8 bytes of weights, one row
+// at a time.
+//
+// This variant: 8 threads per superblock. A Q4_K superblock is exactly 9 x 16 bytes, so
+// it is read through block_q4_K_packed128 (uvec4 q4k[9]):
+//   q4k[0]      = dm (f16 d, f16 dmin) + scales[0..11]
+//   q4k[1 + t]  = qs[16t .. 16t+15]           (thread t = 0..7)
+// Each thread therefore issues exactly two 16-byte loads per superblock per row, and the
+// loads for ALL rows of the workgroup are issued before any math, so 2*NUM_ROWS wide
+// loads are in flight per thread instead of a chain of small ones.
+//
+// Weight layout inside a superblock (same as ggml's dequantize_row_q4_K):
+//   for g = 0..3: qs bytes 32g..32g+31 hold weights 64g+l (low nibble, sub-block 2g)
+//                 and 64g+32+l (high nibble, sub-block 2g+1), l = 0..31.
+// Thread t covers g = t/2, l = 16*(t&1) .. +15 -> 16 low-nibble and 16 high-nibble weights,
+// so it only needs the scale/min of two sub-blocks (2g, 2g+1).
+//
+// Results are not bit-identical to the stock shader (the per-row sum is split across
+// threads differently, so float additions happen in a different order); they are checked
+// against the CPU backend with test-backend-ops instead.
+
+#extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
+
+#include "mul_mat_vec_base.glsl"
+
+layout(local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+layout (binding = 0) readonly buffer A_PACKED128 {block_q4_K_packed128 data_a_packed128[];};
+
+FLOAT_TYPE temp[NUM_COLS][NUM_ROWS];
+
+// Dot product of 16 nibbles (one nibble per byte of q, selected by shift 0 or 4) with
+// 16 consecutive activations starting at vec4 index b4.
+float dot16(const uvec4 q, const uint shift, const uint b4) {
+    const vec4 q0 = vec4(unpack8((q.x >> shift) & 0x0F0F0F0Fu));
+    const vec4 q1 = vec4(unpack8((q.y >> shift) & 0x0F0F0F0Fu));
+    const vec4 q2 = vec4(unpack8((q.z >> shift) & 0x0F0F0F0Fu));
+    const vec4 q3 = vec4(unpack8((q.w >> shift) & 0x0F0F0F0Fu));
+    return dot(q0, vec4(data_b_v4[b4    ])) + dot(q1, vec4(data_b_v4[b4 + 1]))
+         + dot(q2, vec4(data_b_v4[b4 + 2])) + dot(q3, vec4(data_b_v4[b4 + 3]));
+}
+
+float sum16(const uint b4) {
+    const vec4 s = vec4(data_b_v4[b4]) + vec4(data_b_v4[b4 + 1]) + vec4(data_b_v4[b4 + 2]) + vec4(data_b_v4[b4 + 3]);
+    return (s.x + s.y) + (s.z + s.w);
+}
+
+void calc_superblock(const uint a_offset, const uint b_offset, const uint t, const uint i,
+                     const uint num_blocks_per_row, const uint first_row, const uint num_rows) {
+    const uint g    = t >> 1;          // 64-weight group 0..3
+    const uint hf   = t & 1u;          // which 16 bytes of the group's 32 qs bytes
+
+    // ---- issue every A load for this superblock first (all rows) ----
+    uvec4 hdr[NUM_ROWS];
+    uvec4 qs[NUM_ROWS];
+    [[unroll]] for (uint n = 0; n < num_rows; ++n) {
+        const uint ib = a_offset + (first_row + n) * num_blocks_per_row + i;
+        hdr[n] = data_a_packed128[ib].q4k[0];
+        qs[n]  = data_a_packed128[ib].q4k[1 + t];
+    }
+
+    // activations for this thread's 16 low-nibble and 16 high-nibble weights
+    const uint y_lo = i * QUANT_K + 64 * g + 16 * hf;
+    const uint y_hi = y_lo + 32;
+
+    // scale bytes for sub-blocks (2g, 2g+1) sit in the low 16 bits after this shift
+    const uint sh = 16 * (g & 1u);
+
+    [[unroll]] for (uint j = 0; j < NUM_COLS; ++j) {
+        const uint b_lo = (j * p.batch_stride_b + b_offset + y_lo) / 4;
+        const uint b_hi = (j * p.batch_stride_b + b_offset + y_hi) / 4;
+        const float bs_lo = sum16(b_lo);
+        const float bs_hi = sum16(b_hi);
+
+        [[unroll]] for (uint n = 0; n < num_rows; ++n) {
+            const uint Y = hdr[n].y >> sh;   // scales[0..3]
+            const uint Z = hdr[n].z >> sh;   // scales[4..7]
+            const uint W = hdr[n].w >> sh;   // scales[8..11]
+            uint sc, mn;
+            if (g < 2) {
+                sc = Y & 0x3F3Fu;
+                mn = Z & 0x3F3Fu;
+            } else {
+                sc = (W & 0x0F0Fu)        | ((Y >> 2) & 0x3030u);
+                mn = ((W >> 4) & 0x0F0Fu) | ((Z >> 2) & 0x3030u);
+            }
+            const vec2 dm = unpackHalf2x16(hdr[n].x);   // x = d, y = dmin
+
+            const float s_lo = dot16(qs[n], 0, b_lo);
+            const float s_hi = dot16(qs[n], 4, b_hi);
+
+            const float acc = dm.x * (float(sc & 0xFFu) * s_lo + float(sc >> 8) * s_hi)
+                            - dm.y * (float(mn & 0xFFu) * bs_lo + float(mn >> 8) * bs_hi);
+            temp[j][n] += FLOAT_TYPE(acc);
+        }
+    }
+}
+
+void compute_outputs(const uint32_t first_row, const uint32_t num_rows) {
+    uint a_offset, b_offset, d_offset;
+    get_offsets(a_offset, b_offset, d_offset);
+
+    const uint num_blocks_per_row = p.ncols / QUANT_K;
+
+    // 8 threads per superblock
+    const uint it_size = gl_WorkGroupSize.x / 8;
+    const uint tid = gl_LocalInvocationID.x;
+    const uint t   = tid % 8;
+    const uint ix  = tid / 8;
+
+    [[unroll]] for (uint j = 0; j < NUM_COLS; ++j) {
+        [[unroll]] for (uint i = 0; i < NUM_ROWS; ++i) {
+            temp[j][i] = FLOAT_TYPE(0);
+        }
+    }
+
+    [[unroll]] for (uint i = ix; i < num_blocks_per_row; i += it_size)
+        calc_superblock(a_offset, b_offset, t, i, num_blocks_per_row, first_row, num_rows);
+
+    reduce_result(temp, d_offset, first_row, num_rows, tid);
+}
+
+void main() {
+    const uint first_row = NUM_ROWS * (gl_WorkGroupID.x + gl_NumWorkGroups.x * gl_WorkGroupID.z);
+
+    // do NUM_ROWS at a time, unless there aren't enough remaining rows
+    if (first_row + NUM_ROWS <= p.stride_d) {
+        compute_outputs(first_row, NUM_ROWS);
+    } else {
+        if (first_row >= p.stride_d) {
+            return;
+        }
+        compute_outputs(first_row, p.stride_d - first_row);
+    }
+}
