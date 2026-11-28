@@ -7,12 +7,16 @@
 set -u
 O=~/benchlogs/rm; L=$O/sweep.log; mkdir -p $O
 export VK_ICD_FILENAMES=$HOME/mesa-ps4/share/vulkan/icd.d/radeon_icd.x86_64.json GGML_VK_PREFER_HOST_MEMORY=1
-busy(){ pgrep -x llama-server >/dev/null || pgrep -x llama-bench >/dev/null || pgrep -x llama-cli >/dev/null || pgrep -x llama-completion >/dev/null || pgrep -f pm4bridge >/dev/null; }
+busy(){ pgrep -x llama-server >/dev/null || pgrep -x llama-bench >/dev/null || pgrep -x llama-cli >/dev/null || pgrep -f "bin/llama-completion" >/dev/null || pgrep -f pm4bridge >/dev/null; }
 if busy; then echo "BUSY: another GPU job is running, not starting" | tee -a $L; exit 3; fi
 hangs(){ journalctl -k -b --no-pager | grep -ciE "ring .*timeout|preemption time out"; }
 h0=$(hangs); echo "== start $(date -u +%FT%TZ) hang0=$h0" | tee -a $L
 PROMPT="The three primary colors of light are"
 M=~/models
+# Which row variable does PQ2_0 use in the PrismML tree? (rm_kq / rm_iq / rm_stdq)
+pqv=$(grep -m1 "GGML_TYPE_PQ2_0\]\[i\]" ~/llama.cpp-r2rm/ggml/src/ggml-vulkan/ggml-vulkan.cpp | grep -oE "\{[0-9]*\*?rm_(kq|iq|stdq)\b" | head -1 | grep -oE "rm_(kq|iq|stdq)")
+case "$pqv" in rm_kq) BONSAI_VAR=GGML_VK_RM_KQ;; rm_iq) BONSAI_VAR=GGML_VK_RM_IQ;; rm_stdq) BONSAI_VAR=GGML_VK_RM_STDQ;; *) BONSAI_VAR=SKIP;; esac
+echo "PQ2_0 row var: '$pqv' -> $BONSAI_VAR" | tee -a $L
 # tree | model | env var | values (first = default for that var on GCN)
 RUNS=(
  "rm|$M/Qwen__Qwen3-4B-GGUF/Qwen3-4B-Q4_K_M.gguf|GGML_VK_RM_KQ|4 2 8 16"
@@ -24,6 +28,7 @@ for r in "${RUNS[@]}"; do
   IFS='|' read -r tree model var vals <<< "$r"
   B=~/llama.cpp-$tree/build-vk/bin; tag=$(basename $model .gguf)
   [ -f "$model" ] || { echo "MISSING $model" | tee -a $L; continue; }
+  [ "$var" = SKIP ] && { echo "SKIP $tag: row var not found" | tee -a $L; continue; }
   cat "$model" > /dev/null   # pre-warm page cache
   ref=""
   for v in $vals; do

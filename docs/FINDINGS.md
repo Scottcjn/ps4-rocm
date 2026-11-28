@@ -404,6 +404,29 @@ There is no second Linux PS4 (the base console is on fw 13.52), so the HP Victus
 2. A gfx7-tuned dequant for q4_K, iq4_xs and pq2_0 matvec.
 3. Speculative decoding with a tiny draft model.
 
+## 2j. Matvec rows per workgroup: not the lever (2026-11-28, kernel #4)
+
+**Why tested.** In §2i, q4_K reads at ~52 GB/s against q8_0's 100–121 GB/s. Arithmetic says the math units are only ~18% busy at that rate (≈90 G weights/s × ~4 ops vs. the GPU's ~2 T ops/s). That points to too few weight loads in flight, not unpacking cost. The q4_K shader already decodes both nibbles of each byte in one 32-bit op. The cheap knob is rows per workgroup: llama.cpp uses `rm_kq=4` and `rm_stdq=2` on AMD GCN.
+
+**Patch.** `prof/rm/rm-override-244640b.patch` adds env overrides `GGML_VK_RM_STDQ` (1..8), `GGML_VK_RM_KQ` (1..16) and `GGML_VK_RM_IQ` (1..16). Defaults are unchanged when unset.
+- Built as new trees `~/llama.cpp-rm` (244640b) and `~/llama.cpp-r2rm` (PrismML f702476) with `prof/rm/rm-build.sh`.
+- Swept with `prof/rm/rm-sweep.sh`: tg64, `-fa 0`, `-r 3`.
+- PQ2_0 uses `rm_stdq` (2×rows), not `rm_kq`.
+
+| Format (model) | env var | rows → tg64 tok/s (default **bold**) | best vs default |
+|---|---|---|---|
+| q4_K (Qwen3-4B Q4_K_M) | RM_KQ | 2: 21.8 · **4: 22.4** · 8: 22.6 · 16: 20.6 | +1% |
+| q8_0 (Qwen3-0.6B) | RM_STDQ | 1: 92.8 · **2: 107.1** · 4: 111.7 · 8: 105.0 | +4% |
+| iq4_xs (gemma-4-E2B) | RM_IQ | 4: 35.2 · **8: 34.7** · 16: 33.1 | +1% |
+| pq2_0 (Ternary-Bonsai-2-2B) | RM_STDQ | **2: 44.7** · 4: 46.5 · 8: 44.7 | +4% |
+
+- **Correctness.** Greedy 32-token output is byte-identical at every value for all four models (`-c 512`).
+- **Memory.** `llama-completion` without `-c` on gemma-4 and Bonsai-2 runs out of GPU memory ("Not enough memory for command submission"), because their default context is huge. Always pass `-c`.
+- **Hangs.** 0 → 0. Also tested on the Victus RTX 4070: more rows is *slower* there (299 → 256 tok/s at 16).
+- **Conclusion.** Rows per workgroup moves every format by only a few percent, and q4_K stays at about half of q8_0's read rate. Upstream's GCN defaults are already near-optimal for the PS4. The 4-bit gap is not fixed by more rows in flight per workgroup. The remaining suspects are the narrow 32-bit loads per thread and the per-superblock scale decode. Next test: a wide-load q4_K shader (64/128-bit loads, two superblocks per thread), checked for identical output on the Victus first.
+- **Ternary "both channels" hypothesis (Scott).** Neither confirmed nor refuted. PQ2_0 responded like q8_0 (+4%), and this knob didn't move the 4-bit formats either.
+- **GB/s caveat.** Whole-file GB/s (model size × tok/s) is only a proxy: gemma-E2B's per-layer embeddings inflate it to ~104, and 0.6B is not matvec-only. Use §2i's per-kernel GB/s, which comes from the perf logger, for format comparisons.
+
 ## 4. Installing a test kernel from Linux (done on the Pro, 2026-11-25)
 
 The payload hardcodes `bzImage` (it checks USB0, then USB1, then `/data/linux/boot`). We swapped from the running Linux
