@@ -23,6 +23,8 @@ nice -n 15 cmake --build $DST/build-vk --target llama-bench llama-completion -j4
 log "build rc=$?"
 [ -x $DST/build-vk/bin/llama-bench ] && [ -x $DST/build-vk/bin/llama-completion ] || { log "ABORT: binaries missing"; exit 1; }
 
+[ "${BUILD_ONLY:-0}" = 1 ] && { log "BUILDDONE (BUILD_ONLY, no GPU use)"; exit 0; }
+
 # ---------- GPU ----------
 if busy; then log "BUSY: another GPU job is running, not starting"; exit 3; fi
 export VK_ICD_FILENAMES=$HOME/mesa-ps4/share/vulkan/icd.d/radeon_icd.x86_64.json GGML_VK_PREFER_HOST_MEMORY=1
@@ -47,7 +49,7 @@ done
 python3 -c "import os;fd=os.open('$Q4K',os.O_RDONLY);os.posix_fadvise(fd,0,0,os.POSIX_FADV_DONTNEED)"
 
 # Q4_0 format comparison on stock trees (skip any file not downloaded yet)
-for r in "rm|$M/unsloth__Qwen3-0.6B-GGUF/Qwen3-0.6B-Q4_0.gguf" "rm|$M/unsloth__Qwen3-4B-GGUF/Qwen3-4B-Q4_0.gguf" "r2rm|$M/unsloth__gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q4_0.gguf"; do
+for r in "rm|$M/unsloth__Qwen3-0.6B-GGUF/Qwen3-0.6B-Q4_0.gguf" "rm|$M/unsloth__Qwen3-4B-GGUF/Qwen3-4B-Q4_0.gguf" "r2rm|$M/unsloth__gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q4_0.gguf" "rm|$(find $M -name Qwen3.5-4B-Q4_0.gguf -print -quit)"; do
   IFS='|' read -r tree model <<< "$r"
   [ -f "$model" ] || { log "MISSING $model"; continue; }
   cat "$model" > /dev/null
